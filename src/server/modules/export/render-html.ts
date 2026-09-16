@@ -43,6 +43,10 @@ body {
   font-family: 'Artifakt Element', Arial, sans-serif;
   color: #000; font-size: 11pt; line-height: 1.55; -webkit-print-color-adjust: exact; print-color-adjust: exact;
 }
+/* The @page margins above only apply when Chrome prints the PDF; browsers ignore them on screen,
+   so the in-app preview iframe would render edge-to-edge. Mirror them as padding for screen media
+   only, so the preview matches the exported document without changing the print output. */
+@media screen { body { padding: 18mm 16mm 16mm; } }
 h1, h2, h3 { font-family: 'Artifakt Legend', Arial, sans-serif; font-weight: 700; margin: 0; text-wrap: pretty; }
 p { margin: 0 0 10pt; text-wrap: pretty; }
 ul { margin: 0 0 10pt; padding-left: 16pt; }

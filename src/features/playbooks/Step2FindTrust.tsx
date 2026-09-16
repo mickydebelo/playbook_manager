@@ -1,7 +1,7 @@
 "use client";
 import { Fragment } from "react";
 import { sx, sxm } from "@/lib/ui/sx";
-import { Button, Badge, Checkbox, ProgressBar, Tabs } from "@/components/ds";
+import { Button, Badge, Checkbox, ProgressBar, Skeleton, Tabs } from "@/components/ds";
 import type { WorkspaceVals } from "@/features/workspace/types";
 
 export function Step2FindTrust({ v }: { v: WorkspaceVals }) {
@@ -12,6 +12,20 @@ export function Step2FindTrust({ v }: { v: WorkspaceVals }) {
         <h1 style={sx("font:var(--text-h2);font-family:var(--font-legend);margin:0 0 8px;text-wrap:pretty")}>Review the suggested structure and explore <span style={sx("background:var(--hello-yellow);padding:0 6px")}>relevant knowledge</span></h1>
         <p style={sx("font:var(--text-body);color:var(--slate);margin:0")}>Select a section to see recommended sources. Review and choose the content you want to include in your playbook.</p>
       </div>
+      {v.structurePending ? (
+        <div style={sx("flex:1;min-height:0;display:grid;gap:16px;grid-template-columns:minmax(0,0.9fr) minmax(0,2fr)")}>
+          <div style={sx("border:1px solid var(--slate-200);border-radius:var(--radius-md);padding:20px;display:flex;flex-direction:column;gap:16px")}>
+            <span style={sx("font:var(--text-h4);font-size:16px")}>Suggested structure</span>
+            <Skeleton lines={8} />
+          </div>
+          <div style={sx("border:1px solid var(--slate-200);border-radius:var(--radius-md);padding:24px;display:flex;flex-direction:column;gap:16px;align-items:center;justify-content:center;text-align:center")}>
+            <div style={sx("width:36px;height:36px;border-radius:50%;border:3px solid var(--slate-200);border-top-color:var(--adsk-black);animation:pm-spin .8s linear infinite")} />
+            <div style={sx("font:var(--text-body);font-weight:700")}>Finding relevant knowledge…</div>
+            <div style={sx("font:var(--text-body-sm);color:var(--slate);max-width:360px")}>Proposing the chapter structure and retrieving candidate sources for each section from your brief.</div>
+            <div style={sx("width:100%;max-width:360px")}><ProgressBar percent={v.jobProgressPercent} label={v.progressLabel || "Working…"} /></div>
+          </div>
+        </div>
+      ) : (
       <div style={sxm("flex:1;min-height:0;display:grid;gap:16px", { gridTemplateColumns: v.step2Cols })}>
         {/* Structure */}
         <div style={sx("border:1px solid var(--slate-200);border-radius:var(--radius-md);display:flex;flex-direction:column;min-height:0;overflow:hidden")}>
@@ -138,12 +152,13 @@ export function Step2FindTrust({ v }: { v: WorkspaceVals }) {
           </div>
         ) : null}
       </div>
+      )}
       <div style={sx("display:flex;justify-content:space-between;align-items:center;gap:24px;padding:16px 0 24px;border-top:1px solid var(--slate-100);margin-top:16px")}>
         <Button variant="ghost" onClick={v.goStep1}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M11 6l-6 6 6 6" /></svg>Back</Button>
-        {v.showProgress ? <div style={sx("flex:1;max-width:360px")}><ProgressBar percent={v.jobProgressPercent} label={v.progressLabel} /></div> : null}
+        {v.showProgress && !v.structurePending ? <div style={sx("flex:1;max-width:360px")}><ProgressBar percent={v.jobProgressPercent} label={v.progressLabel} /></div> : null}
         <div style={sx("display:flex;align-items:center;gap:16px")}>
           <span style={sx("font:var(--text-body-sm);color:var(--slate)")}>{v.totalSelected} sources selected across {v.sectionsWithSources} sections</span>
-          <Button variant="primary" size="lg" disabled={v.drafting} onClick={v.createDraft}>{v.draftLabel} <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 6l6 6-6 6" /></svg></Button>
+          <Button variant="primary" size="lg" disabled={v.drafting || v.structurePending} onClick={v.createDraft}>{v.draftLabel} <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M13 6l6 6-6 6" /></svg></Button>
         </div>
       </div>
     </div>

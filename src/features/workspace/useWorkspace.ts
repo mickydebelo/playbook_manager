@@ -113,6 +113,12 @@ const EXPORT_FORMAT_OPTIONS = [
 const DRAFT_CONCURRENCY = 2;
 
 const FOCUS_SUGGESTIONS = ["Business strategy", "Project management", "Change management", "Document control"];
+
+/** Greeting shown when a section has no assistant history yet, so the panel is never blank. */
+const ASSISTANT_WELCOME: ChatEntry = {
+  role: "assistant",
+  text: "I can rewrite, shorten or tailor this section from its sources. Tell me what you'd like to change, or pick a prompt below.",
+};
 const TOOLBAR: [keyof typeof ICONS, string][] = [
   ["bold", "Bold"], ["italic", "Italic"], ["underline", "Underline"], ["ul", "Bulleted list"], ["ol", "Numbered list"],
   ["alignL", "Align left"], ["alignC", "Align center"], ["alignR", "Align right"], ["linkS", "Insert link"], ["comment", "Comment"],
@@ -175,7 +181,7 @@ export function useWorkspace(options: WorkspaceOptions): WorkspaceVals {
     knowledgeQuery: "",
     filterOn: false,
     editRaw: false,
-    rightTab: "Sources",
+    rightTab: "AI Assistant",
     chatDraft: "",
     chatBusy: false,
     conflict: null,
@@ -291,13 +297,22 @@ export function useWorkspace(options: WorkspaceOptions): WorkspaceVals {
   // ---- section content + assistant history for the editor ------------------
   useEffect(() => {
     if (!selectedId || s.step !== 3) return;
+    const id = selectedId;
     let cancelled = false;
     void (async () => {
       try {
-        const [section, history] = await Promise.all([workspaceApi.section(selectedId), workspaceApi.assistantHistory(selectedId)]);
+        const [section, history] = await Promise.all([workspaceApi.section(id), workspaceApi.assistantHistory(id)]);
         if (cancelled) return;
-        setSectionCache((c) => ({ ...c, [selectedId]: section }));
-        setChat(history.map((m) => ({ role: m.role, text: m.body })));
+        setSectionCache((c) => {
+          const existing = c[id];
+          // While a draft streams in, this single-section fetch can resolve before the section has
+          // been written. Don't let that empty response clobber content the poll already delivered;
+          // when drafting ends this effect re-runs (job type is a dependency) and picks up the text.
+          if (existing?.contentMd?.trim() && !section.contentMd?.trim()) return c;
+          return { ...c, [id]: section };
+        });
+        // Open on guidance rather than a blank column when the section has no assistant history yet.
+        setChat(history.length ? history.map((m) => ({ role: m.role, text: m.body })) : [ASSISTANT_WELCOME]);
       } catch (err) {
         if (!cancelled) errorToast(err, "Couldn't load this section");
       }
@@ -305,7 +320,7 @@ export function useWorkspace(options: WorkspaceOptions): WorkspaceVals {
     return () => {
       cancelled = true;
     };
-  }, [selectedId, s.step, errorToast]);
+  }, [selectedId, s.step, errorToast, job?.type]);
 
   // ---- library -------------------------------------------------------------
   useEffect(() => {
@@ -335,10 +350,24 @@ export function useWorkspace(options: WorkspaceOptions): WorkspaceVals {
    * is already delivered. The gateway has no streaming endpoint, so this is an honest reveal of
    * text we hold rather than a pretend token stream.
    */
+  // The latest section bodies, reachable without making the reveal below restart on every poll.
+  const sectionCacheRef = useRef(sectionCache);
+  sectionCacheRef.current = sectionCache;
+  // Whether the open section's text has landed. A boolean flips once, so it does not churn the
+  // reveal effect on every poll the way the `arrived` Set and `sectionCache` object identities do.
+  const selectedArrived = !!selectedId && arrived.has(selectedId);
+
   useEffect(() => {
-    if (!selectedId || job?.type !== "create_draft") return;
-    if (!arrived.has(selectedId) || revealedFor.current === selectedId) return;
-    const text = sectionCache[selectedId]?.contentMd ?? "";
+    // Only animate during drafting. When drafting is not (or no longer) active, clear any partial
+    // offset so the full text is shown — otherwise a reveal interrupted by the job finishing would
+    // leave `revealed` frozen (often at 0) and the editor would look empty until a manual refresh.
+    if (!selectedId || job?.type !== "create_draft") {
+      revealedFor.current = null;
+      setRevealed(null);
+      return;
+    }
+    if (!selectedArrived || revealedFor.current === selectedId) return;
+    const text = sectionCacheRef.current[selectedId]?.contentMd ?? "";
     if (!text) return;
     revealedFor.current = selectedId;
     setRevealed(0);
@@ -354,7 +383,7 @@ export function useWorkspace(options: WorkspaceOptions): WorkspaceVals {
       }
     }, 28);
     return () => clearInterval(timer);
-  }, [selectedId, arrived, sectionCache, job?.type]);
+  }, [selectedId, selectedArrived, job?.type]);
 
   // ---- helpers -------------------------------------------------------------
   const updBrief = (patch: Partial<BriefState>) => {
@@ -450,19 +479,31 @@ export function useWorkspace(options: WorkspaceOptions): WorkspaceVals {
       return;
     }
 
+    // A brand-new playbook navigates to its own URL, which remounts the workspace. Kick the job
+    // first and persist the stage, then navigate; the reattach probe on the other side picks the
+    // running job up so step 2 shows its loading state instead of a dead page.
+    if (isNew) {
+      try {
+        await workspaceApi.findKnowledge(id!);
+        await workspaceApi.setStage(id!, 2).catch(() => undefined);
+      } catch (err) {
+        errorToast(err, "Couldn't find relevant knowledge");
+        return;
+      }
+      router.replace(`/playbooks/${id}?step=2`);
+      return;
+    }
+
+    // An existing playbook advances in place: move to step 2 straight away and let it show the
+    // retrieval loading state, rather than holding the user on the brief page until it finishes.
+    setState({ step: 2, persistedStage: Math.max(2, s.persistedStage) });
+    syncUrlStep(2);
+    await workspaceApi.setStage(id!, 2).catch(() => undefined);
     const ok = await runJob(
       "find_knowledge",
       () => workspaceApi.findKnowledge(id!),
       async () => {
         await refreshDetail(id);
-        await workspaceApi.setStage(id!, 2).catch(() => undefined);
-        setState({ persistedStage: Math.max(2, s.persistedStage) });
-        // Only a newly created playbook changes URL; an existing one just advances in place.
-        if (isNew) router.replace(`/playbooks/${id}?step=2`);
-        else {
-          setState({ step: 2 });
-          syncUrlStep(2);
-        }
       },
       "Couldn't find relevant knowledge",
     );
@@ -510,6 +551,22 @@ export function useWorkspace(options: WorkspaceOptions): WorkspaceVals {
     let cancelled = false;
     void (async () => {
       try {
+        // Retrieval runs after the brief is submitted and, for a new playbook, across the navigation
+        // that remounts the workspace. Reattach so step 2 shows its loading state and fills in when
+        // the structure and sources land, instead of looking idle.
+        const retrieval = await workspaceApi.latestJob(playbookId, "find_knowledge");
+        if (!cancelled && retrieval && (retrieval.status === "running" || retrieval.status === "queued")) {
+          setJob(retrieval);
+          const done = await waitForJob(retrieval.id, (j) => {
+            if (!cancelled) setJob(j);
+          });
+          if (cancelled) return;
+          setLastResult(done);
+          setJob(null);
+          await refreshDetail(playbookId);
+          return;
+        }
+
         const running = await workspaceApi.latestJob(playbookId, "create_draft");
         if (cancelled || !running || (running.status !== "running" && running.status !== "queued")) return;
         setJob(running);
@@ -977,6 +1034,9 @@ export function useWorkspace(options: WorkspaceOptions): WorkspaceVals {
     cancel: () => router.push("/playbooks"),
 
     // step 2
+    // True while retrieval is still proposing the structure and sources, so step 2 can show a
+    // loading state rather than an empty structure the user might mistake for "no results".
+    structurePending: finding,
     step2Cols: preview ? "minmax(0,0.9fr) minmax(0,1.3fr) minmax(0,1.1fr)" : "minmax(0,0.9fr) minmax(0,2fr)",
     step3Cols: narrow ? "minmax(0,1.6fr) minmax(280px,1fr)" : "minmax(220px,0.8fr) minmax(320px,1.8fr) minmax(280px,1fr)",
     narrow, wide: !narrow,
@@ -1056,10 +1116,12 @@ export function useWorkspace(options: WorkspaceOptions): WorkspaceVals {
     editModeLabel: s.editRaw ? "Editing text" : "Formatted view",
     editToggleLabel: s.editRaw ? "Done" : "Edit text",
     toggleEditMode: () => setState({ editRaw: !s.editRaw }),
-    draftText: revealed === null ? draftText : draftText.slice(0, revealed),
+    // The partial slice is a drafting-only animation; outside an active draft always show the whole
+    // text, so an interrupted reveal can never leave the editor looking empty.
+    draftText: revealed === null || !drafting ? draftText : draftText.slice(0, revealed),
     setDraftText, wordCount,
-    blocks: revealed === null ? blocks : parseBlocks(draftText.slice(0, revealed)),
-    revealing: revealed !== null,
+    blocks: revealed === null || !drafting ? blocks : parseBlocks(draftText.slice(0, revealed)),
+    revealing: revealed !== null && drafting,
     sectionPending: drafting && !!selectedId && !(sectionCache[selectedId]?.contentMd ?? "").trim(),
     savedLabel: s.saving ? "Saving…" : formatSavedLabel(currentSection?.contentSavedAt ?? null),
     hasConflict: !!s.conflict,
@@ -1086,9 +1148,9 @@ export function useWorkspace(options: WorkspaceOptions): WorkspaceVals {
         errorToast(err, "Couldn't load the history");
       }
     })(),
-    rightTabs: ["Sources", "Assistant", "Comments"], rightTab: s.rightTab,
+    rightTabs: ["AI Assistant", "Sources", "Comments"], rightTab: s.rightTab,
     setRightTab: (t: string) => setState({ rightTab: t }),
-    rightIsSources: s.rightTab === "Sources", rightIsAI: s.rightTab === "Assistant", rightIsComments: s.rightTab === "Comments",
+    rightIsSources: s.rightTab === "Sources", rightIsAI: s.rightTab === "AI Assistant", rightIsComments: s.rightTab === "Comments",
     sectionSources: selectedCandidates.map((c) => ({
       ...candidateView(c),
       openPreview: () => { setState({ previewId: c.id, previewPage: 1, previewTab: "Preview" }); goStep(2); },

@@ -174,6 +174,12 @@ export function Step3EditCreate({ v }: { v: WorkspaceVals }) {
                       ) : null}
                     </Fragment>
                   ))}
+                  {v.chatBusy ? (
+                    <div style={sx("align-self:flex-start;max-width:90%;padding:10px 14px;border-radius:var(--radius-md);background:var(--warm-slate-100);color:var(--slate);font:var(--text-body-sm);display:flex;align-items:center;gap:8px")}>
+                      <span style={sx("width:14px;height:14px;border-radius:50%;border:2px solid var(--slate-200);border-top-color:var(--slate);animation:pm-spin .8s linear infinite;flex-shrink:0")} />
+                      AI Assistant is thinking…
+                    </div>
+                  ) : null}
                 </div>
                 <div style={sx("display:flex;flex-wrap:wrap;gap:6px")}>
                   {v.aiPrompts.map((p: any) => (

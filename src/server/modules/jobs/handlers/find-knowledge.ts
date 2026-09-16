@@ -91,9 +91,11 @@ export async function findKnowledgeHandler({ db, job, progress }: JobContext): P
     const topic = sectionTopic({ chapterTitle: chapterTitle.get(section.chapterId) ?? "", sectionTitle: section.title, brief });
 
     // Retrieval is scoped to this customer: shared sources plus their own, never another's.
+    // `includeUnapproved` surfaces relevant but not-yet-approved uploads so they can be reviewed and
+    // selected here; the customer boundary and archived exclusion still hold.
     const matches = useVectors
-      ? await knowledge.searchChunksByVector(db, await embedText(topic), brief.customerId, 60)
-      : await knowledge.searchChunksByText(db, [section.title, ...brief.focusAreas].flatMap((t) => t.split(/\s+/)), brief.customerId, 60);
+      ? await knowledge.searchChunksByVector(db, await embedText(topic), brief.customerId, 60, { includeUnapproved: true })
+      : await knowledge.searchChunksByText(db, [section.title, ...brief.focusAreas].flatMap((t) => t.split(/\s+/)), brief.customerId, 60, { includeUnapproved: true });
 
     // Best chunk per source, then the closest few sources.
     const bySource = new Map<string, { distance: number; text: string }>();

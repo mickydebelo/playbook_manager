@@ -67,7 +67,18 @@ describe("keyword retrieval fallback", () => {
     const hits = await searchChunksByText(ctx.db, ["naming"], null);
     const ids = hits.map((h) => h.sourceId);
     expect(ids).toContain(approvedId);
-    expect(ids).not.toContain(draftId); // unreviewed content must never be proposed
+    expect(ids).not.toContain(draftId); // unreviewed content must never be proposed by default
+  });
+
+  it("includes unapproved (but not archived) sources when asked, for step 2 proposals", async () => {
+    const ids = (await searchChunksByText(ctx.db, ["naming"], null, 40, { includeUnapproved: true })).map((h) => h.sourceId);
+    expect(ids).toContain(approvedId);
+    expect(ids).toContain(draftId); // a relevant upload is offered for the consultant to review and pick
+
+    await ctx.db.update(knowledgeSources).set({ archivedAt: new Date() }).where(eq(knowledgeSources.id, draftId));
+    const afterArchive = (await searchChunksByText(ctx.db, ["naming"], null, 40, { includeUnapproved: true })).map((h) => h.sourceId);
+    expect(afterArchive).not.toContain(draftId); // archived stays out either way
+    await ctx.db.update(knowledgeSources).set({ archivedAt: null }).where(eq(knowledgeSources.id, draftId));
   });
 });
 

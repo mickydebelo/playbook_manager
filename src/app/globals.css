@@ -8,6 +8,7 @@ input:focus,textarea:focus,select:focus{outline:2px solid #000;outline-offset:1p
 *{box-sizing:border-box}
 @keyframes pm-fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 @keyframes pm-pulse{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes pm-spin{to{transform:rotate(360deg)}}
 
 /* style-hover="…" attributes from the design map to these classes. */
 .hv-slate100:hover{background:var(--warm-slate-100)}

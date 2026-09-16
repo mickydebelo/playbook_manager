@@ -42,15 +42,24 @@ export async function getSourcesByIds(db: Db, ids: string[]): Promise<KnowledgeR
 export type ChunkMatch = { sourceId: string; chunkId: string; text: string; pageNo: number | null; distance: number };
 
 /**
- * Nearest chunks by cosine distance. Only approved, non-archived sources are considered, so an
- * unreviewed upload can never be proposed for a customer deliverable.
+ * Nearest chunks by cosine distance. By default only approved, non-archived sources are considered,
+ * so an unreviewed upload can never silently reach a customer deliverable. Step 2 proposals opt in
+ * with `includeUnapproved` so a relevant new upload is offered for the consultant to review and
+ * pick; archived sources are excluded either way.
  *
  * `customerId` is the confidentiality boundary: a document ingested for one customer must never be
  * proposed for another's playbook. It is enforced here in SQL rather than in the UI, so no caller
  * can forget it — an unowned (shared) source has `customer_id is null` and is always in scope.
  */
-export async function searchChunksByVector(db: Db, embedding: number[], customerId: string | null, limit = 40): Promise<ChunkMatch[]> {
+export async function searchChunksByVector(
+  db: Db,
+  embedding: number[],
+  customerId: string | null,
+  limit = 40,
+  opts: { includeUnapproved?: boolean } = {},
+): Promise<ChunkMatch[]> {
   const literal = `[${embedding.join(",")}]`;
+  const statusClause = opts.includeUnapproved ? sql`k.status <> 'archived'` : sql`k.status = 'approved'`;
   const rows = await db.execute<{ source_id: string; chunk_id: string; text: string; page_no: number | null; distance: number }>(sql`
     select c.source_id, c.id as chunk_id, c.text, c.page_no,
            (c.embedding <=> ${literal}::vector) as distance
@@ -58,7 +67,7 @@ export async function searchChunksByVector(db: Db, embedding: number[], customer
     join knowledge_sources k on k.id = c.source_id
     where c.embedding is not null
       and k.archived_at is null
-      and k.status = 'approved'
+      and ${statusClause}
       and (k.customer_id is null or k.customer_id = ${customerId}::uuid)
     order by c.embedding <=> ${literal}::vector
     limit ${limit}
@@ -77,7 +86,13 @@ export async function searchChunksByVector(db: Db, embedding: number[], customer
  * Keyword fallback for when no embeddings exist yet (the gateway is optional in development).
  * Carries the same customer boundary as the vector path, for the same reason.
  */
-export async function searchChunksByText(db: Db, terms: string[], customerId: string | null, limit = 40): Promise<ChunkMatch[]> {
+export async function searchChunksByText(
+  db: Db,
+  terms: string[],
+  customerId: string | null,
+  limit = 40,
+  opts: { includeUnapproved?: boolean } = {},
+): Promise<ChunkMatch[]> {
   const cleaned = terms.map((t) => t.trim().toLowerCase()).filter((t) => t.length > 2);
   if (!cleaned.length) return [];
   const pattern = cleaned.map((t) => t.replace(/[%_]/g, "")).join("|");
@@ -88,7 +103,7 @@ export async function searchChunksByText(db: Db, terms: string[], customerId: st
     .where(
       and(
         sql`${knowledgeSources.archivedAt} is null`,
-        eq(knowledgeSources.status, "approved"),
+        opts.includeUnapproved ? sql`${knowledgeSources.status} <> 'archived'` : eq(knowledgeSources.status, "approved"),
         sql`(${knowledgeSources.customerId} is null or ${knowledgeSources.customerId} = ${customerId}::uuid)`,
         sql`lower(${sourceChunks.text}) ~ ${pattern}`,
       ),
