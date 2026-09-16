@@ -1,0 +1,75 @@
+/* Generated from design/_ds/autodesk-design-system-build-in-progress-c6396427-f02c-4627-bd01-3107abfe2f30/tokens — do not hand-edit values; they are the approved brand tokens. */
+@font-face{font-family:'Artifakt Legend';src:url('/fonts/ArtifaktLegend-Regular.otf') format('opentype');font-weight:400;font-style:normal}
+@font-face{font-family:'Artifakt Legend';src:url('/fonts/ArtifaktLegend-Bold.otf') format('opentype');font-weight:700;font-style:normal}
+@font-face{font-family:'Artifakt Element';src:url('/fonts/ArtifaktElement-Regular.otf') format('opentype');font-weight:400;font-style:normal}
+@font-face{font-family:'Artifakt Element';src:url('/fonts/ArtifaktElement-Bold.otf') format('opentype');font-weight:700;font-style:normal}
+:root{--font-legend:'Artifakt Legend',Arial,sans-serif;--font-element:'Artifakt Element',Arial,sans-serif}
+
+:root{
+--adsk-black:#000000;
+--adsk-white:#ffffff;
+--hello-yellow:#ffff00;
+--hello-yellow-200:#fdfda1;
+--hello-yellow-600:#eee410;
+--hello-yellow-700:#d7cb1d;
+--warm-slate:#d5d5cb;
+--warm-slate-100:#f5f5f0;
+--warm-slate-300:#e4e4db;
+--slate:#666666;
+--slate-100:#e8e8e8;
+--slate-200:#c9c9c9;
+--slate-300:#a3a3a3;
+--slate-400:#858585;
+--dawn:#f09d4f;
+--dawn-100:#ffe9c5;
+--dawn-300:#fec681;
+--dawn-600:#e68d3a;
+--dawn-700:#cd7523;
+--dusk:#f2520a;
+--dusk-100:#ffddcd;
+--dusk-300:#ff9667;
+--dusk-600:#de4f0d;
+--dusk-700:#d34621;
+--twilight:#1d91d0;
+--twilight-100:#bfe4f7;
+--twilight-300:#4eb3e9;
+--twilight-600:#1278af;
+--twilight-700:#136b9a;
+--morning:#2ad0a9;
+--morning-100:#d5f6ee;
+--morning-300:#7be4cc;
+--morning-600:#24b291;
+--morning-700:#21a183;
+--surface-default:var(--adsk-white);
+--surface-inverse:var(--adsk-black);
+--surface-muted:var(--warm-slate-100);
+--surface-panel-light:var(--warm-slate-100);
+--surface-panel-dark:var(--adsk-black);
+--text-primary-on-light:var(--adsk-black);
+--text-primary-on-dark:var(--adsk-white);
+--text-secondary:var(--slate);
+--text-payoff:var(--hello-yellow);
+--border-default:var(--slate-200);
+--border-strong:var(--adsk-black);
+--focus-ring:var(--twilight)
+}
+
+:root{
+--text-display:700 64px/64px var(--font-legend);
+--text-h1:700 42px/44px var(--font-legend);
+--text-h2:700 32px/36px var(--font-legend);
+--text-h3:700 24px/28px var(--font-legend);
+--text-h4:700 18px/24px var(--font-legend);
+--text-body-lg:400 18px/28px var(--font-element);
+--text-body:400 16px/24px var(--font-element);
+--text-body-sm:400 14px/20px var(--font-element);
+--text-caption:400 12px/16px var(--font-element);
+--text-button:700 14px/16px var(--font-element);
+--text-label:700 12px/16px var(--font-element)
+}
+
+:root{
+--space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-6:24px;--space-8:32px;--space-10:40px;--space-12:48px;
+--radius-sm:4px;--radius-md:8px;--radius-lg:16px;--radius-xl:24px;--radius-2xl:32px;
+--shadow-card:0 1px 2px rgba(0,0,0,.08),0 4px 12px rgba(0,0,0,.06)
+}

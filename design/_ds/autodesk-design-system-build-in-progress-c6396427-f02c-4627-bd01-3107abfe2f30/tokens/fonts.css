@@ -1,0 +1,5 @@
+@font-face{font-family:'Artifakt Legend';src:url('../assets/fonts/ArtifaktLegend-Regular.otf') format('opentype');font-weight:400;font-style:normal}
+@font-face{font-family:'Artifakt Legend';src:url('../assets/fonts/ArtifaktLegend-Bold.otf') format('opentype');font-weight:700;font-style:normal}
+@font-face{font-family:'Artifakt Element';src:url('../assets/fonts/ArtifaktElement-Regular.otf') format('opentype');font-weight:400;font-style:normal}
+@font-face{font-family:'Artifakt Element';src:url('../assets/fonts/ArtifaktElement-Bold.otf') format('opentype');font-weight:700;font-style:normal}
+:root{--font-legend:'Artifakt Legend',Arial,sans-serif;--font-element:'Artifakt Element',Arial,sans-serif}

@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="_ds/autodesk-design-system-build-in-progress-c6396427-f02c-4627-bd01-3107abfe2f30/tokens/fonts.css">
+  <link rel="stylesheet" href="_ds/autodesk-design-system-build-in-progress-c6396427-f02c-4627-bd01-3107abfe2f30/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/autodesk-design-system-build-in-progress-c6396427-f02c-4627-bd01-3107abfe2f30/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/autodesk-design-system-build-in-progress-c6396427-f02c-4627-bd01-3107abfe2f30/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/autodesk-design-system-build-in-progress-c6396427-f02c-4627-bd01-3107abfe2f30/styles.css">
+  <script src="_ds/autodesk-design-system-build-in-progress-c6396427-f02c-4627-bd01-3107abfe2f30/_ds_bundle.js"></script>
+  <style>
+    html,body{margin:0;padding:0;height:100%;background:#fff}
+    a{color:#000}a:hover{color:#1d91d0}
+    input,textarea,select,button{font-family:'Artifakt Element',Arial,sans-serif}
+    input:focus,textarea:focus,select:focus{outline:2px solid #000;outline-offset:1px}
+    *{box-sizing:border-box}
+    @keyframes pm-fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  </style>
+</helmet>
+
+<div data-screen-label="Playbook Manager" style="position:relative;display:flex;flex-direction:column;height:100vh;min-height:720px;font-family:var(--font-element);color:var(--adsk-black);background:var(--adsk-white);font-size:14px;line-height:20px">
+
+  <!-- Top bar -->
+  <div style="display:flex;align-items:center;justify-content:space-between;height:56px;padding:0 24px;border-bottom:1px solid var(--slate-100);flex-shrink:0">
+    <img src="assets/autodesk-logo.png" alt="Autodesk" style="height:22px;width:auto">
+    <div style="display:flex;align-items:center;gap:10px">
+      <img src="assets/profile.png" alt="Micky Debelo" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:1px solid var(--slate-200)">
+      <span style="font:var(--text-body-sm)">Micky Debelo</span>
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"></path></svg>
+    </div>
+  </div>
+
+  <div style="display:flex;flex:1;min-height:0">
+
+    <!-- Sidebar -->
+    <nav style="width:clamp(168px,18vw,208px);flex-shrink:0;background:var(--warm-slate-100);display:flex;flex-direction:column;padding:24px 16px 32px;border-right:1px solid var(--slate-100)">
+      <div style="font:var(--text-h4);font-family:var(--font-legend);padding:0 8px;margin-bottom:24px">Playbook manager</div>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="4">
+          <button onClick="{{ n.go }}" style="display:flex;align-items:center;gap:12px;height:44px;padding:0 12px;border:none;border-radius:var(--radius-md);background:{{ n.bg }};color:var(--adsk-black);font:var(--text-body-sm);cursor:pointer;text-align:left" style-hover="background:var(--warm-slate-300)">
+            <span style="width:20px;height:20px;display:inline-flex" dangerouslySetInnerHTML="{{ n.icon }}"></span>
+            {{ n.label }}
+          </button>
+        </sc-for>
+      </div>
+      <div style="margin-top:auto;padding:0 8px">
+        <div style="width:28px;height:2px;background:var(--adsk-black);margin-bottom:16px"></div>
+        <div style="font:var(--text-body-sm);color:var(--slate)">Make Anything</div>
+      </div>
+    </nav>
+
+    <!-- Main -->
+    <main style="flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden">
+
+      <!-- ===== CREATE FLOW ===== -->
+      <sc-if value="{{ isCreate }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;flex-direction:column;flex:1;min-height:0">
+          <!-- Stepper -->
+          <div style="display:flex;justify-content:center;padding:20px 48px 0;flex-shrink:0">
+            <div style="display:flex;width:100%;max-width:820px">
+              <sc-for list="{{ steps }}" as="s" hint-placeholder-count="4">
+                <button onClick="{{ s.go }}" style="flex:1;display:flex;flex-direction:column;align-items:center;gap:8px;background:none;border:none;cursor:pointer;padding:0;position:relative">
+                  <sc-if value="{{ s.notFirst }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;left:0;right:50%;top:13px;height:1px;background:{{ s.lineBg }};margin-right:14px"></span></sc-if>
+                  <sc-if value="{{ s.notLast }}" hint-placeholder-val="{{ false }}"><span style="position:absolute;left:50%;right:0;top:13px;height:1px;background:{{ s.lineBgNext }};margin-left:14px"></span></sc-if>
+                  <span style="width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:{{ s.bg }};color:{{ s.color }};border:1px solid {{ s.border }};font:var(--text-label);position:relative;z-index:1">
+                    <sc-if value="{{ s.done }}" hint-placeholder-val="{{ false }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"></path></svg></sc-if>
+                    <sc-if value="{{ s.notDone }}" hint-placeholder-val="{{ true }}">{{ s.n }}</sc-if>
+                  </span>
+                  <span style="font:var(--text-body-sm);font-weight:{{ s.weight }};color:{{ s.labelColor }}">{{ s.label }}</span>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+
+          <!-- STEP 1: Define brief -->
+          <sc-if value="{{ step1 }}" hint-placeholder-val="{{ true }}">
+            <div data-screen-label="1 Define brief" style="flex:1;overflow:auto;padding:24px 48px 0;animation:pm-fade .2s ease">
+              <div style="max-width:960px;margin:0 auto;display:flex;flex-direction:column;gap:32px;padding-bottom:24px">
+                <div>
+                  <div style="font:var(--text-label);letter-spacing:.06em;color:var(--slate);text-transform:uppercase;margin-bottom:12px">Create playbook</div>
+                  <h1 style="font:var(--text-h1);font-family:var(--font-legend);margin:0 0 12px;text-wrap:pretty">Create a <span style="background:var(--hello-yellow);padding:0 8px">digital transformation</span> playbook</h1>
+                  <p style="font:var(--text-body-lg);color:var(--slate);margin:0;max-width:760px;text-wrap:pretty">Tell us about the customer and what you want to achieve. We'll use this to find the most relevant knowledge and propose a starting structure.</p>
+                </div>
+
+                <!-- Customer -->
+                <div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:24px;align-items:end">
+                  <div>
+                    <div style="font:var(--text-h4);margin-bottom:4px">Customer</div>
+                    <div style="font:var(--text-body-sm);color:var(--slate);margin-bottom:12px">Enter the name of the customer.</div>
+                    <div style="position:relative">
+                      <input value="{{ brief.customer }}" onChange="{{ setCustomer }}" placeholder="Customer name" style="width:100%;height:44px;padding:0 40px 0 14px;border:1px solid var(--slate-200);border-radius:var(--radius-md);font:var(--text-body);color:var(--adsk-black);background:var(--adsk-white)">
+                      <button onClick="{{ clearCustomer }}" aria-label="Clear" style="position:absolute;right:8px;top:8px;width:28px;height:28px;border:none;background:none;cursor:pointer;color:var(--slate);display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg></button>
+                    </div>
+                  </div>
+                  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+                    <div style="display:flex;gap:12px">
+                      <button onClick="{{ toggleLogo }}" style="display:flex;align-items:center;gap:10px;height:44px;padding:0 16px;border:1px solid var(--slate-200);border-radius:var(--radius-md);background:{{ logoBg }};font:var(--text-body-sm);cursor:pointer" style-hover="opacity:.8">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="2"></rect><path d="M3 16l5-5 4 4 3-3 6 6"></path><circle cx="16" cy="9" r="1.5"></circle></svg>{{ logoLabel }}
+                      </button>
+                      <button onClick="{{ toggleColor }}" style="display:flex;align-items:center;gap:10px;height:44px;padding:0 16px;border:1px solid var(--slate-200);border-radius:var(--radius-md);background:var(--adsk-white);font:var(--text-body-sm);cursor:pointer" style-hover="opacity:.8">
+                        <span style="width:16px;height:16px;border-radius:50%;background:{{ brandColor }};border:1px solid var(--slate-200)"></span>Add brand color
+                      </button>
+                    </div>
+                    <span style="font:var(--text-caption);color:var(--slate)">Optional</span>
+                  </div>
+                </div>
+
+                <!-- Industry -->
+                <div>
+                  <div style="font:var(--text-h4);margin-bottom:4px">Industry</div>
+                  <div style="font:var(--text-body-sm);color:var(--slate);margin-bottom:12px">Select the customer's industry.</div>
+                  <select value="{{ brief.industry }}" onChange="{{ setIndustry }}" style="width:100%;max-width:560px;height:44px;padding:0 14px;border:1px solid var(--slate-200);border-radius:var(--radius-md);font:var(--text-body);background:var(--adsk-white);color:var(--adsk-black)">
+                    <sc-for list="{{ industries }}" as="i" hint-placeholder-count="3"><option value="{{ i }}">{{ i }}</option></sc-for>
+                  </select>
+                </div>
+
+                <!-- Org size -->
+                <div>
+                  <div style="font:var(--text-h4);margin-bottom:4px">Organization size</div>
+                  <div style="font:var(--text-body-sm);color:var(--slate);margin-bottom:16px">Select the approximate number of employees.</div>
+                  <div style="position:relative;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));max-width:800px">
+                    <span style="position:absolute;left:12.5%;right:12.5%;top:11px;height:1px;background:var(--slate-200)"></span>
+                    <sc-for list="{{ sizes }}" as="z" hint-placeholder-count="4">
+                      <button onClick="{{ z.pick }}" style="display:flex;flex-direction:column;align-items:center;gap:12px;background:none;border:none;cursor:pointer;padding:0;position:relative">
+                        <span style="width:22px;height:22px;border-radius:50%;background:var(--adsk-white);border:1px solid {{ z.border }};display:flex;align-items:center;justify-content:center"><span style="width:10px;height:10px;border-radius:50%;background:{{ z.dot }}"></span></span>
+                        <span style="font:var(--text-body-sm);font-weight:{{ z.weight }}">{{ z.label }}</span>
+                        <span style="font:var(--text-body-sm);color:var(--slate);margin-top:-8px">{{ z.range }}</span>
+                      </button>
+                    </sc-for>
+                  </div>
+                </div>
+
+                <!-- Objective -->
+                <div>
+                  <div style="font:var(--text-h4);margin-bottom:4px">What do you want this playbook to achieve?</div>
+                  <div style="font:var(--text-body-sm);color:var(--slate);margin-bottom:12px">Describe the business outcome, challenge or transformation you want to support.</div>
+                  <div style="position:relative">
+                    <textarea value="{{ brief.objective }}" onChange="{{ setObjective }}" maxLength="500" rows="3" placeholder="Describe the objective" style="width:100%;padding:14px 14px 28px;border:1px solid var(--slate-200);border-radius:var(--radius-md);font:var(--text-body);color:var(--adsk-black);resize:vertical;background:var(--adsk-white)"></textarea>
+                    <span style="position:absolute;right:14px;bottom:12px;font:var(--text-caption);color:var(--slate)">{{ objectiveCount }}/500</span>
+                  </div>
+                </div>
+
+                <!-- Focus areas -->
+                <div>
+                  <div style="font:var(--text-h4);margin-bottom:4px">What should the playbook focus on?</div>
+                  <div style="font:var(--text-body-sm);color:var(--slate);margin-bottom:12px">Select one or more focus areas.</div>
+                  <div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px">
+                    <sc-for list="{{ focusSelected }}" as="f" hint-placeholder-count="0">
+                      <span style="display:inline-flex;align-items:center;gap:8px;height:40px;padding:0 8px 0 14px;border-radius:var(--radius-sm);background:var(--adsk-black);color:var(--adsk-white);font:var(--text-body-sm)">{{ f.label }}<button onClick="{{ f.remove }}" aria-label="Remove" style="border:none;background:none;color:var(--adsk-white);cursor:pointer;width:24px;height:24px;display:flex;align-items:center;justify-content:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 6L6 18M6 6l12 12"></path></svg></button></span>
+                    </sc-for>
+                    <sc-if value="{{ focusInputOpen }}" hint-placeholder-val="{{ false }}">
+                      <input autoFocus="{{ true }}" value="{{ focusDraft }}" onChange="{{ setFocusDraft }}" onKeyDown="{{ focusKey }}" placeholder="Type a focus area, press Enter" style="height:40px;padding:0 14px;border:1px solid var(--twilight);border-radius:var(--radius-sm);font:var(--text-body-sm);width:260px">
+                    </sc-if>
+                    <sc-if value="{{ focusInputClosed }}" hint-placeholder-val="{{ true }}">
+                      <button onClick="{{ openFocusInput }}" style="display:inline-flex;align-items:center;gap:10px;height:40px;padding:0 16px;border:1px solid var(--slate-200);border-radius:var(--radius-sm);background:var(--adsk-white);font:var(--text-body-sm);cursor:pointer" style-hover="opacity:.8"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>Add focus areas</button>
+                    </sc-if>
+                    <span style="width:1px;height:28px;background:var(--slate-200)"></span>
+                    <span style="font:var(--text-body-sm);color:var(--slate)">Suggested for you based on your objective:</span>
+                    <sc-for list="{{ focusSuggestions }}" as="f" hint-placeholder-count="3">
+                      <button onClick="{{ f.add }}" style="height:36px;padding:0 14px;border:1px solid var(--slate-200);border-radius:var(--radius-sm);background:var(--warm-slate-100);font:var(--text-body-sm);cursor:pointer" style-hover="background:var(--warm-slate-300)">{{ f.label }}</button>
+                    </sc-for>
+                  </div>
+                </div>
+
+                <!-- Optional details -->
+                <div style="border:1px solid var(--slate-200);border-radius:var(--radius-lg);padding:20px 24px">
+                  <button onClick="{{ toggleOptional }}" style="display:flex;align-items:center;gap:12px;width:100%;background:none;border:none;padding:0;cursor:pointer;text-align:left;color:var(--adsk-black)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transform:rotate({{ optionalRot }});transition:transform .15s;flex-shrink:0"><path d="M9 6l6 6-6 6"></path></svg>
+                    <span style="flex:1">
+                      <span style="display:block;font:var(--text-h4)">Optional details</span>
+                      <span style="display:block;font:var(--text-body-sm);color:var(--slate);margin-top:4px">Sources, frameworks and internal guidance that sharpen the search.</span>
+                    </span>
+                    <span style="font:var(--text-body-sm);color:var(--slate);white-space:nowrap">{{ optionalSummary }}</span>
+                  </button>
+                <sc-if value="{{ optionalOpen }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;flex-direction:column;gap:28px;margin-top:24px;padding-top:24px;border-top:1px solid var(--slate-100)">
+                <div>
+                  <div style="font:var(--text-h4);margin-bottom:4px">Add relevant sources</div>
+                  <div style="font:var(--text-body-sm);color:var(--slate);margin-bottom:12px">Add links to existing documents, repositories or webpages we should consider.</div>
+                  <div style="display:flex;flex-direction:column;gap:12px">
+                    <sc-for list="{{ briefSources }}" as="s" hint-placeholder-count="2">
+                      <div style="display:flex;align-items:center;gap:14px;padding:12px 14px;border:1px solid var(--slate-200);border-radius:var(--radius-md);background:var(--adsk-white)">
+                        <span style="width:20px;height:20px;display:inline-flex;color:var(--adsk-black)" dangerouslySetInnerHTML="{{ s.icon }}"></span>
+                        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+                          <input value="{{ s.title }}" onChange="{{ s.setTitle }}" style="border:none;padding:0;font:var(--text-body-sm);font-weight:700;color:var(--adsk-black);background:transparent">
+                          <input value="{{ s.url }}" onChange="{{ s.setUrl }}" placeholder="https://" style="border:none;padding:0;font:var(--text-body-sm);color:var(--slate);background:transparent">
+                        </div>
+                        <button onClick="{{ s.remove }}" aria-label="Remove" style="width:32px;height:32px;border:none;background:none;cursor:pointer;color:var(--slate);display:flex;align-items:center;justify-content:center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg></button>
+                      </div>
+                    </sc-for>
+                    <button onClick="{{ addBriefSource }}" style="align-self:flex-start;display:inline-flex;align-items:center;gap:10px;height:40px;padding:0 16px;border:1px solid var(--slate-200);border-radius:var(--radius-sm);background:var(--adsk-white);font:var(--text-body-sm);cursor:pointer" style-hover="opacity:.8"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v8M8 12h8"></path></svg>Add source link</button>
+                  </div>
+                </div>
+
+                <!-- Additional context -->
+                <div>
+                  <div style="font:var(--text-h4);margin-bottom:4px">Additional context</div>
+                  <div style="font:var(--text-body-sm);color:var(--slate);margin-bottom:12px">Include any frameworks, standards or internal guidance.</div>
+                  <textarea value="{{ brief.context }}" onChange="{{ setContext }}" rows="3" placeholder="e.g. ISO 19650, internal delivery standards" style="width:100%;padding:14px;border:1px solid var(--slate-200);border-radius:var(--radius-md);font:var(--text-body);resize:vertical"></textarea>
+                </div>
+                </div>
+                </sc-if>
+                </div>
+              </div>
+              <div style="max-width:960px;margin:0 auto;display:flex;justify-content:flex-end;align-items:center;gap:24px;padding:20px 0 32px;border-top:1px solid var(--slate-100);position:sticky;bottom:0;background:var(--adsk-white)">
+                <sc-if value="{{ briefInvalid }}" hint-placeholder-val="{{ false }}"><span style="font:var(--text-body-sm);color:var(--dusk-700);margin-right:auto">Add a customer name and objective to continue.</span></sc-if>
+                <x-import component-from-global-scope="AutodeskDesignSystem_c63964.Button" variant="ghost" on-click="{{ cancel }}" hint-size="auto,40px">Cancel</x-import>
+                <x-import component-from-global-scope="AutodeskDesignSystem_c63964.Button" variant="primary" size="lg" disabled="{{ finding }}" on-click="{{ findKnowledge }}" hint-size="auto,48px">{{ findLabel }} <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></x-import>
+              </div>
+            </div>
+          </sc-if>
+
+          <!-- STEP 2: Find & trust -->
+          <sc-if value="{{ step2 }}" hint-placeholder-val="{{ false }}">
+            <div data-screen-label="2 Find and trust" style="flex:1;min-height:0;display:flex;flex-direction:column;padding:24px 32px 0;animation:pm-fade .2s ease">
+              <div style="margin-bottom:20px">
+                <div style="font:var(--text-label);letter-spacing:.06em;color:var(--slate);text-transform:uppercase;margin-bottom:12px">Find &amp; trust</div>
+                <h1 style="font:var(--text-h2);font-family:var(--font-legend);margin:0 0 8px;text-wrap:pretty">Review the suggested structure and explore <span style="background:var(--hello-yellow);padding:0 6px">relevant knowledge</span></h1>
+                <p style="font:var(--text-body);color:var(--slate);margin:0">Select a section to see recommended sources. Review and choose the content you want to include in your playbook.</p>
+              </div>
+              <div style="flex:1;min-height:0;display:grid;grid-template-columns:{{ step2Cols }};gap:16px">
+                <!-- Structure -->
+                <div style="border:1px solid var(--slate-200);border-radius:var(--radius-md);display:flex;flex-direction:column;min-height:0;overflow:hidden">
+                  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:12px 8px 12px 16px;border-bottom:1px solid var(--slate-100)">
+                    <span style="font:var(--text-h4);font-size:16px">Suggested structure</span>
+                    <div style="display:flex;gap:8px">
+                      <button onClick="{{ addChapter }}" style="display:inline-flex;align-items:center;gap:8px;height:32px;padding:0 12px;border:1px solid var(--slate-200);border-radius:var(--radius-sm);background:var(--adsk-white);font:var(--text-body-sm);cursor:pointer;white-space:nowrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>Add chapter</button>
+                    </div>
+                  </div>
+                  <div style="flex:1;overflow:auto;padding:4px 8px">
+                    <sc-for list="{{ outline }}" as="o" hint-placeholder-count="8">
+                      <div>
+                        <div onClick="{{ o.select }}" style="display:flex;align-items:center;gap:8px;height:40px;padding:0 8px 0 {{ o.pad }};border-radius:var(--radius-sm);cursor:pointer;background:{{ o.bg }};color:{{ o.color }};border-top:{{ o.borderTop }}" style-hover="background:var(--warm-slate-100)">
+                          <sc-if value="{{ o.isChapter }}" hint-placeholder-val="{{ true }}"><button onClick="{{ o.toggle }}" aria-label="Toggle" style="width:20px;height:20px;border:none;background:none;cursor:pointer;color:var(--slate);display:flex;align-items:center;justify-content:center;padding:0"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transform:rotate({{ o.rot }})"><path d="M9 6l6 6-6 6"></path></svg></button></sc-if>
+                          <span style="flex:1;font:var(--text-body-sm);font-weight:{{ o.weight }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ o.n }} {{ o.title }}</span>
+                          <span style="font:var(--text-body-sm);color:var(--slate)">{{ o.count }}</span>
+                          <span style="width:10px;height:10px;border-radius:50%;background:{{ o.statusBg }}"></span>
+                        </div>
+                      </div>
+                    </sc-for>
+                    <button onClick="{{ addSection }}" style="margin:12px 8px;display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 14px;border:1px solid var(--slate-200);border-radius:var(--radius-sm);background:var(--adsk-white);font:var(--text-body-sm);cursor:pointer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>Add section</button>
+                  </div>
+                  <div style="display:flex;flex-wrap:wrap;gap:12px 16px;padding:12px 16px;border-top:1px solid var(--slate-100);font:var(--text-caption);color:var(--slate)">
+                    <span style="display:inline-flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:var(--morning-600)"></span>Well covered</span>
+                    <span style="display:inline-flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:var(--dawn)"></span>Thin coverage</span>
+                    <span style="display:inline-flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:var(--slate-300)"></span>No sources yet</span>
+                  </div>
+                </div>
+
+                <!-- Knowledge -->
+                <div style="border:1px solid var(--slate-200);border-radius:var(--radius-md);display:flex;flex-direction:column;min-height:0;overflow:hidden">
+                  <div style="padding:16px 16px 12px;border-bottom:1px solid var(--slate-100)">
+                    <div style="font:var(--text-h4);font-size:16px;margin-bottom:8px">Knowledge for: {{ selectedTitle }}</div>
+                    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                      <span style="font:var(--text-body-sm);color:var(--slate);margin-right:auto;white-space:nowrap">{{ knowledgeCount }} relevant sources</span>
+                      <div style="position:relative">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position:absolute;left:10px;top:9px;color:var(--slate)"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+                        <input value="{{ knowledgeQuery }}" onChange="{{ setKnowledgeQuery }}" placeholder="Search in this section" style="height:32px;width:180px;padding:0 10px 0 30px;border:1px solid var(--slate-200);border-radius:var(--radius-sm);font:var(--text-body-sm)">
+                      </div>
+                      <button onClick="{{ toggleFilter }}" style="display:inline-flex;align-items:center;gap:8px;height:32px;padding:0 12px;border:1px solid var(--slate-200);border-radius:var(--radius-sm);background:{{ filterBg }};font:var(--text-body-sm);cursor:pointer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 5h18M6 12h12M10 19h4"></path></svg>{{ filterLabel }}</button>
+                    </div>
+                  </div>
+                  <div style="flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:8px">
+                    <sc-for list="{{ knowledge }}" as="k" hint-placeholder-count="5">
+                      <div onClick="{{ k.preview }}" style="display:flex;gap:12px;padding:14px;border:1px solid {{ k.border }};border-radius:var(--radius-md);background:{{ k.bg }};cursor:pointer" style-hover="border-color:var(--slate-300)">
+                        <x-import component-from-global-scope="AutodeskDesignSystem_c63964.Checkbox" checked="{{ k.checked }}" on-change="{{ k.toggle }}" hint-size="18px,18px"></x-import>
+                        <span style="width:32px;height:32px;border-radius:var(--radius-sm);background:{{ k.typeBg }};color:{{ k.typeColor }};display:flex;align-items:center;justify-content:center;font:var(--text-label);flex-shrink:0">{{ k.typeLabel }}</span>
+                        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+                          <span style="font:var(--text-body-sm);font-weight:700">{{ k.title }}</span>
+                          <span style="font:var(--text-body-sm);color:var(--slate)">{{ k.org }}</span>
+                          <span style="font:var(--text-body-sm);color:var(--slate)">{{ k.year }}</span>
+                          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:8px">
+                            <sc-for list="{{ k.tags }}" as="t" hint-placeholder-count="2"><x-import component-from-global-scope="AutodeskDesignSystem_c63964.Badge" tone="{{ t.tone }}" hint-size="auto,22px">{{ t.label }}</x-import></sc-for>
+                          </div>
+                        </div>
+                        <span style="color:var(--slate);font-weight:700;letter-spacing:.1em">···</span>
+                      </div>
+                    </sc-for>
+                    <sc-if value="{{ knowledgeEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:32px;text-align:center;font:var(--text-body-sm);color:var(--slate)">No sources match your search.</div></sc-if>
+                  </div>
+                </div>
+
+                <!-- Preview -->
+                <sc-if value="{{ hasPreview }}" hint-placeholder-val="{{ true }}">
+                  <div style="border:1px solid var(--slate-200);border-radius:var(--radius-md);display:flex;flex-direction:column;min-height:0;overflow:hidden;padding:16px">
+                    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px">
+                      <h3 style="font:var(--text-h4);font-size:20px;line-height:24px;font-family:var(--font-legend);margin:0">{{ preview.title }}</h3>
+                      <button onClick="{{ closePreview }}" aria-label="Close" style="border:none;background:none;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"></path></svg></button>
+                    </div>
+                    <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:10px 0 12px">
+                      <sc-for list="{{ preview.tags }}" as="t" hint-placeholder-count="2"><x-import component-from-global-scope="AutodeskDesignSystem_c63964.Badge" tone="{{ t.tone }}" hint-size="auto,22px">{{ t.label }}</x-import></sc-for>
+                      <span style="font:var(--text-body-sm);color:var(--slate)">{{ preview.year }} · {{ preview.org }}</span>
+                    </div>
+                    <x-import component-from-global-scope="AutodeskDesignSystem_c63964.Tabs" items="{{ previewTabs }}" active="{{ previewTab }}" on-change="{{ setPreviewTab }}" hint-size="100%,40px"></x-import>
+                    <sc-if value="{{ previewIsPreview }}" hint-placeholder-val="{{ true }}">
+                      <div style="flex:1;min-height:0;display:flex;flex-direction:column;background:var(--warm-slate-100);border-radius:var(--radius-md);margin-top:12px;padding:10px;gap:10px">
+                        <div style="display:flex;align-items:center;justify-content:space-between;font:var(--text-body-sm)">
+                          <div style="display:flex;align-items:center;gap:8px">
+                            <button onClick="{{ prevPage }}" style="width:28px;height:28px;border:none;background:none;cursor:pointer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"></path></svg></button>
+                            <span>{{ previewPage }} / {{ preview.pages }}</span>
+                            <button onClick="{{ nextPage }}" style="width:28px;height:28px;border:none;background:none;cursor:pointer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"></path></svg></button>
+                          </div>
+                          <div style="display:flex;align-items:center;gap:4px;border:1px solid var(--slate-200);border-radius:var(--radius-sm);background:var(--adsk-white);padding:0 4px;height:28px">
+                            <button onClick="{{ zoomOut }}" style="width:24px;height:24px;border:none;background:none;cursor:pointer">−</button><span style="min-width:44px;text-align:center">{{ zoom }}%</span><button onClick="{{ zoomIn }}" style="width:24px;height:24px;border:none;background:none;cursor:pointer">+</button>
+                          </div>
+                        </div>
+                        <div style="flex:1;min-height:0;overflow:auto;display:flex;justify-content:center;align-items:flex-start">
+                          <div style="width:{{ zoomWidth }};aspect-ratio:1/1.3;background:var(--adsk-white);box-shadow:var(--shadow-card);padding:8% 8% 6%;display:flex;flex-direction:column;position:relative;overflow:hidden;flex-shrink:0">
+                            <img src="assets/autodesk-logo.png" alt="" style="height:10px;width:auto;align-self:flex-start">
+                            <div style="margin-top:22%;font:700 16px/18px var(--font-legend);text-wrap:balance;max-width:60%">{{ preview.title }}</div>
+                            <div style="margin-top:8px;font:9px/12px var(--font-element);color:var(--slate);max-width:55%">{{ preview.subtitle }}</div>
+                            <img src="assets/cover.jpg" alt="" style="position:absolute;right:-10%;bottom:8%;width:55%;aspect-ratio:1;object-fit:cover;clip-path:polygon(30% 0,100% 0,100% 100%,0 100%)">
+                            <div style="margin-top:auto;font:7px/10px var(--font-element);color:var(--slate)">Page {{ previewPage }}</div>
+                          </div>
+                        </div>
+                      </div>
+                    </sc-if>
+                    <sc-if value="{{ previewIsMeta }}" hint-placeholder-val="{{ false }}">
+                      <div style="flex:1;margin-top:12px;display:grid;grid-template-columns:auto 1fr;gap:8px 16px;font:var(--text-body-sm);align-content:start">
+                        <sc-for list="{{ previewMeta }}" as="m" hint-placeholder-count="5"><span style="color:var(--slate)">{{ m.k }}</span><span>{{ m.v }}</span></sc-for>
+                      </div>
+                    </sc-if>
+                    <div style="display:flex;gap:10px;margin-top:12px">
+                      <x-import component-from-global-scope="AutodeskDesignSystem_c63964.Button" variant="secondary" on-click="{{ openOriginal }}" hint-size="auto,40px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 4h6v6M20 4l-9 9M18 14v6H4V6h6"></path></svg>Open original</x-import>
+                      <x-import component-from-global-scope="AutodeskDesignSystem_c63964.Button" variant="{{ useVariant }}" on-click="{{ toggleUsePreview }}" style="{{ growStyle }}" hint-size="auto,40px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 13l4 4L19 7"></path></svg>{{ useLabel }}</x-import>
+                    </div>
+                  </div>
+                </sc-if>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0 24px;border-top:1px solid var(--slate-100);margin-top:16px">
+                <x-import component-from-global-scope="AutodeskDesignSystem_c63964.Button" variant="ghost" on-click="{{ goStep1 }}" hint-size="auto,40px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg>Back</x-import>
+                <div style="display:flex;align-items:center;gap:16px">
+                  <span style="font:var(--text-body-sm);color:var(--slate)">{{ totalSelected }} sources selected across {{ sectionsWithSources }} sections</span>
+                  <x-import component-from-global-scope="AutodeskDesignSystem_c63964.Button" variant="primary" size="lg" disabled="{{ drafting }}" on-click="{{ createDraft }}" hint-size="auto,48px">{{ draftLabel }} <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></x-import>
+                </div>
+              </div>
+            </div>
+          </sc-if>
+
+          <!-- STEP 3: Edit & create -->
+          <sc-if value="{{ step3 }}" hint-placeholder-val="{{ false }}">
+            <div data-screen-label="3 Edit and create" style="flex:1;min-height:0;display:flex;flex-direction:column;padding:24px 24px 0;animation:pm-fade .2s ease">
+              <sc-if value="{{ narrow }}" hint-placeholder-val="{{ false }}">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+                  <span style="font:var(--text-label);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap">Section</span>
+                  <select value="{{ selectedId }}" onChange="{{ selectById }}" style="flex:1;height:40px;padding:0 12px;border:1px solid var(--slate-200);border-radius:var(--radius-md);font:var(--text-body-sm);background:var(--adsk-white)">
+                    <sc-for list="{{ outlineFlat }}" as="o" hint-placeholder-count="10"><option value="{{ o.key }}">{{ o.indent }}{{ o.n }} {{ o.title }}</option></sc-for>
+                  </select>
+                  <button onClick="{{ addSection }}" title="Add section" aria-label="Add section" style="display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border:1px solid var(--slate-200);border-radius:var(--radius-sm);background:var(--adsk-white);cursor:pointer;flex-shrink:0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v8M8 12h8"></path></svg></button>
+                </div>
+              </sc-if>
+              <div style="flex:1;min-height:0;display:grid;grid-template-columns:{{ step3Cols }};gap:12px">
+                <!-- Outline -->
+                <sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}">
+                <div style="border:1px solid var(--slate-200);border-radius:var(--radius-md);display:flex;flex-direction:column;min-height:0;overflow:hidden">
+                  <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 8px 12px 16px">
+                    <span style="font:var(--text-label);letter-spacing:.06em;text-transform:uppercase">Outline</span>
+                    <button onClick="{{ addSection }}" title="Add section" aria-label="Add section" style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border:1px solid var(--slate-200);border-radius:var(--radius-sm);background:var(--adsk-white);cursor:pointer;flex-shrink:0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v8M8 12h8"></path></svg></button>
+                  </div>
+                  <div style="flex:1;overflow:auto;padding:0 8px 8px;display:flex;flex-direction:column;gap:2px">
+                    <sc-for list="{{ outlineFlat }}" as="o" hint-placeholder-count="10">
+                      <div onClick="{{ o.select }}" style="display:flex;align-items:center;gap:10px;height:40px;padding:0 8px 0 {{ o.pad }};border-radius:var(--radius-sm);cursor:pointer;background:{{ o.bg }};margin-top:{{ o.mt }}" style-hover="background:var(--warm-slate-100)">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="flex-shrink:0;color:{{ o.iconColor }}"><path d="M14 3H6a1 1 0 00-1 1v16a1 1 0 001 1h12a1 1 0 001-1V8z"></path><path d="M14 3v5h5"></path></svg>
+                        <span style="flex:1;font:var(--text-body-sm);font-weight:{{ o.weight }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ o.n }} {{ o.title }}</span>
+                        <span style="color:var(--slate);font-weight:700;letter-spacing:.1em;font-size:12px">···</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+                </sc-if>
+
+                <!-- Editor -->
+                <div style="display:flex;flex-direction:column;min-height:0;min-width:0">
+                  <div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px 16px;margin-bottom:12px">
+                    <div style="min-width:0">
+                      <div style="font:var(--text-label);letter-spacing:.06em;color:var(--slate);text-transform:uppercase;margin-bottom:8px">Edit playbook</div>
+                      <h2 style="font:var(--text-h3);font-family:var(--font-legend);margin:0"><span style="background:var(--hello-yellow);padding:0 6px">{{ selectedN }}</span> {{ selectedTitle }}</h2>
+                      <div style="font:var(--text-body-sm);color:var(--slate);margin-top:6px">{{ savedLabel }} · {{ wordCount }} words · <button onClick="{{ toast_changes }}" style="border:none;background:none;text-decoration:underline;color:var(--slate);cursor:pointer;font:var(--text-body-sm);padding:0">View changes</button></div>
+                    </div>
+                    <div style="display:flex;gap:8px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end">
+                    <x-import component-from-global-scope="AutodeskDesignSystem_c63964.Button" variant="ghost" on-click="{{ toggleEditMode }}" hint-size="auto,40px">{{ editToggleLabel }}</x-import>
+                    <x-import component-from-global-scope="AutodeskDesignSystem_c63964.Button" variant="secondary" disabled="{{ regenerating }}" on-click="{{ regenerate }}" hint-size="auto,40px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 12a8 8 0 01-14 5.3M4 12a8 8 0 0114-5.3"></path><path d="M20 4v4h-4M4 20v-4h4"></path></svg>{{ regenLabel }}</x-import>
+                    </div>
+                  </div>
+                  <div style="display:flex;align-items:center;gap:4px;padding:6px 8px;border:1px solid var(--slate-200);border-radius:var(--radius-md);margin-bottom:12px;flex-wrap:wrap">
+                    <select style="height:30px;border:none;background:transparent;font:var(--text-body-sm);padding:0 6px"><option>Paragraph</option><option>Heading 2</option><option>Heading 3</option></select>
+                    <span style="width:1px;height:20px;background:var(--slate-200);margin:0 4px"></span>
+                    <sc-for list="{{ toolbar }}" as="t" hint-placeholder-count="8">
+                      <button title="{{ t.title }}" onClick="{{ t.click }}" style="width:30px;height:30px;border:none;border-radius:var(--radius-sm);background:{{ t.bg }};cursor:pointer;display:flex;align-items:center;justify-content:center;font:var(--text-body-sm);font-weight:700" style-hover="background:var(--warm-slate-100)"><span style="display:inline-flex;width:16px;height:16px" dangerouslySetInnerHTML="{{ t.icon }}"></span></button>
+                    </sc-for>
+                    </div>
+                  <div style="flex:1;min-height:0;overflow:auto;border:1px solid var(--slate-200);border-radius:var(--radius-md);background:var(--adsk-white);padding:32px 40px">
+                    <sc-if value="{{ editRaw }}" hint-placeholder-val="{{ false }}">
+                      <textarea value="{{ draftText }}" onChange="{{ setDraftText }}" style="width:100%;min-height:480px;border:none;padding:0;font:var(--text-body);resize:none;color:var(--adsk-black)"></textarea>
+                    </sc-if>
+                    <sc-if value="{{ editRich }}" hint-placeholder-val="{{ true }}">
+                      <div style="display:flex;flex-direction:column;gap:12px;max-width:680px;opacity:{{ draftOpacity }};transition:opacity .2s">
+                        <sc-for list="{{ blocks }}" as="b" hint-placeholder-count="6">
+                          <div>
+                            <sc-if value="{{ b.isH1 }}" hint-placeholder-val="{{ true }}"><h2 style="font:var(--text-h3);font-family:var(--font-legend);margin:0 0 8px">{{ b.text }}</h2></sc-if>
+                            <sc-if value="{{ b.isH2 }}" hint-placeholder-val="{{ false }}"><h3 style="font:var(--text-h4);margin:12px 0 4px">{{ b.text }}</h3></sc-if>
+                            <sc-if value="{{ b.isP }}" hint-placeholder-val="{{ false }}"><p style="font:var(--text-body);margin:0;text-wrap:pretty">{{ b.text }}</p></sc-if>
+                            <sc-if value="{{ b.isUl }}" hint-placeholder-val="{{ false }}"><ul style="margin:0;padding-left:22px;font:var(--text-body);display:flex;flex-direction:column;gap:4px"><sc-for list="{{ b.items }}" as="li" hint-placeholder-count="3"><li>{{ li }}</li></sc-for></ul></sc-if>
+                          </div>
+                        </sc-for>
+                      </div>
+                    </sc-if>
+                  </div>
+                  </div>
+
+                <!-- Right panel -->
+                <div style="border:1px solid var(--slate-200);border-radius:var(--radius-md);display:flex;flex-direction:column;min-height:0;overflow:hidden">
+                  <div style="padding:0 8px;overflow-x:auto">
+                    <x-import component-from-global-scope="AutodeskDesignSystem_c63964.Tabs" items="{{ rightTabs }}" active="{{ rightTab }}" on-change="{{ setRightTab }}" hint-size="100%,40px"></x-import>
+                  </div>
+                  <div style="flex:1;overflow:auto;padding:16px;display:flex;flex-direction:column;gap:12px">
+                    <sc-if value="{{ rightIsSources }}" hint-placeholder-val="{{ true }}">
+                      <div style="font:var(--text-body);font-weight:700">Sources for this section ({{ sectionSourceCount }})</div>
+                      <sc-for list="{{ sectionSources }}" as="s" hint-placeholder-count="3">
+                        <div onClick="{{ s.openPreview }}" style="display:flex;gap:12px;padding:14px;border:1px solid var(--slate-200);border-radius:var(--radius-md);cursor:pointer" style-hover="border-color:var(--slate-300)">
+                          <span style="width:32px;height:32px;border-radius:var(--radius-sm);background:{{ s.typeBg }};color:{{ s.typeColor }};display:flex;align-items:center;justify-content:center;font:var(--text-label);flex-shrink:0">{{ s.typeLabel }}</span>
+                          <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px">
+                            <span style="font:var(--text-body-sm);font-weight:700">{{ s.title }}</span>
+                            <span style="font:var(--text-body-sm);color:var(--slate)">{{ s.org }} · {{ s.year }}</span>
+                            <div style="display:flex;gap:6px;flex-wrap:wrap"><sc-for list="{{ s.tags }}" as="t" hint-placeholder-count="1"><x-import component-from-global-scope="AutodeskDesignSystem_c63964.Badge" tone="{{ t.tone }}" hint-size="auto,22px">{{ t.label }}</x-import></sc-for></div>
+                            <span style="font:var(--text-caption);color:var(--slate);margin-top:4px">Relevant for</span>
+                            <span style="font:var(--text-caption);color:var(--slate)">{{ s.relevantFor }}</span>
+                          </div>
+                          <button onClick="{{ s.removeFromSection }}" aria-label="Remove" style="border:none;background:none;cursor:pointer;color:var(--slate);height:24px">···</button>
+                        </div>
+                      </sc-for>
+                      <sc-if value="{{ noSectionSources }}" hint-placeholder-val="{{ false }}"><div style="padding:16px;border:1px dashed var(--slate-200);border-radius:var(--radius-md);font:var(--text-body-sm);color:var(--slate);text-align:center">No sources selected for this section yet.</div></sc-if>
+                      <button onClick="{{ goStep2 }}" style="display:inline-flex;align-items:center;gap:10px;height:40px;padding:0 14px;border:1px solid var(--slate-200);border-radius:var(--radius-sm);background:var(--adsk-white);font:var(--text-body-sm);cursor:pointer;align-self:flex-start"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v8M8 12h8"></path></svg>Add or find more sources</button>
+                      <sc-if value="{{ showSuggestion }}" hint-placeholder-val="{{ true }}">
+                        <div style="border-top:1px solid var(--slate-100);padding-top:12px;display:flex;flex-direction:column;gap:12px">
+                          <div style="font:var(--text-body);font-weight:700">Suggested content (1)</div>
+                          <div style="display:flex;gap:12px;align-items:center;padding:14px;border-radius:var(--radius-md);background:var(--warm-slate-100)">
+                            <span style="width:20px;height:20px;border-radius:50%;background:var(--adsk-black);flex-shrink:0;display:flex;align-items:center;justify-content:center"><svg width="12" height="12" viewBox="0 0 24 24" fill="var(--adsk-white)"><path d="M12 2l2 6 6 2-6 2-2 6-2-6-6-2 6-2z"></path></svg></span>
+                            <span style="flex:1;font:var(--text-body-sm)">Add a short customer-specific introduction for {{ customerName }}?</span>
+                            <x-import component-from-global-scope="AutodeskDesignSystem_c63964.Button" variant="secondary" size="sm" on-click="{{ insertSuggestion }}" hint-size="auto,32px">Insert</x-import>
+                          </div>
+                        </div>
+                      </sc-if>
+                      <div style="display:flex;gap:12px;padding:14px;border-radius:var(--radius-md);background:var(--warm-slate-100);margin-top:auto">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="flex-shrink:0"><path d="M9 18h6M10 21h4M12 3a6 6 0 00-3.5 10.9c.5.4.8 1 .8 1.6V16h5.4v-.5c0-.6.3-1.2.8-1.6A6 6 0 0012 3z"></path></svg>
+                        <div><div style="font:var(--text-body-sm);font-weight:700">Tip</div><div style="font:var(--text-body-sm);color:var(--slate)">You can ask the AI Assistant to rewrite, shorten, or tailor this section.</div></div>
+                      </div>
+                    </sc-if>
+                    <sc-if value="{{ rightIsAI }}" hint-placeholder-val="{{ false }}">
+                      <div style="flex:1;display:flex;flex-direction:column;gap:12px;min-height:0">
+                        <div style="flex:1;overflow:auto;display:flex;flex-direction:column;gap:10px">
+                          <sc-for list="{{ chat }}" as="m" hint-placeholder-count="2">
+                            <div style="align-self:{{ m.align }};max-width:90%;padding:10px 14px;border-radius:var(--radius-md);background:{{ m.bg }};color:{{ m.color }};font:var(--text-body-sm);white-space:pre-line">{{ m.text }}</div>
+                          </sc-for>
+                        </div>
+                        <div style="display:flex;flex-wrap:wrap;gap:6px">
+                          <sc-for list="{{ aiPrompts }}" as="p" hint-placeholder-count="3"><button onClick="{{ p.send }}" style="height:30px;padding:0 12px;border:1px solid var(--slate-200);border-radius:var(--radius-sm);background:var(--adsk-white);font:var(--text-caption);cursor:pointer" style-hover="background:var(--warm-slate-100)">{{ p.label }}</button></sc-for>
+                        </div>
+                        <div style="display:flex;gap:8px">
+                          <input value="{{ chatDraft }}" onChange="{{ setChatDraft }}" onKeyDown="{{ chatKey }}" placeholder="Ask the assistant" style="flex:1;height:40px;padding:0 12px;border:1px solid var(--slate-200);border-radius:var(--radius-sm);font:var(--text-body-sm)">
+                          <x-import component-from-global-scope="AutodeskDesignSystem_c63964.Button" variant="primary" on-click="{{ sendChat }}" hint-size="auto,40px">Send</x-import>
+                        </div>
+                      </div>
+                    </sc-if>
+                    <sc-if value="{{ rightIsComments }}" hint-placeholder-val="{{ false }}">
+                      <sc-for list="{{ comments }}" as="c" hint-placeholder-count="2">
+                        <div style="display:flex;gap:10px;padding:12px;border:1px solid var(--slate-200);border-radius:var(--radius-md)">
+                          <span style="width:28px;height:28px;border-radius:50%;background:var(--warm-slate-100);border:1px solid var(--slate-200);display:flex;align-items:center;justify-content:center;font:var(--text-label);flex-shrink:0">{{ c.initials }}</span>
+                          <div style="display:flex;flex-direction:column;gap:4px;min-width:0"><span style="font:var(--text-body-sm)"><b>{{ c.author }}</b> <span style="color:var(--slate)">· {{ c.when }}</span></span><span style="font:var(--text-body-sm)">{{ c.text }}</span></div>
+                        </div>
+                      </sc-for>
+                      <div style="display:flex;gap:8px;margin-top:auto">
+                        <input value="{{ commentDraft }}" onChange="{{ setCommentDraft }}" onKeyDown="{{ commentKey }}" placeholder="Add a comment" style="flex:1;height:40px;padding:0 12px;border:1px solid var(--slate-200);border-radius:var(--radius-sm);font:var(--text-body-sm)">
+                        <x-import component-from-global-scope="AutodeskDesignSystem_c63964.Button" variant="secondary" on-click="{{ addComment }}" hint-size="auto,40px">Post</x-import>
+                      </div>
+                    </sc-if>
+                  </div>
+                </div>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0 24px;border-top:1px solid var(--slate-100);margin-top:16px">
+                <x-import component-from-global-scope="AutodeskDesignSystem_c63964.Button" variant="ghost" on-click="{{ goStep2 }}" hint-size="auto,40px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg>Back</x-import>
+                <div style="display:flex;gap:12px">
+                  <x-import component-from-global-scope="AutodeskDesignSystem_c63964.Button" variant="secondary" size="lg" on-click="{{ saveDraft }}" hint-size="auto,48px">Save draft</x-import>
+                  <x-import component-from-global-scope="AutodeskDesignSystem_c63964.Button" variant="primary" size="lg" on-click="{{ goStep4 }}" hint-size="auto,48px">Continue to review <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></x-import>
+                </div>
+              </div>
+            </div>
+          </sc-if>
+
+          <!-- STEP 4: Review & deliver -->
+          <sc-if value="{{ step4 }}" hint-placeholder-val="{{ false }}">
+            <div data-screen-label="4 Review and deliver" style="flex:1;min-height:0;overflow:auto;padding:24px 40px 0;animation:pm-fade .2s ease">
+              <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:24px;margin-bottom:16px">
+                <div>
+                  <div style="font:var(--text-label);letter-spacing:.06em;color:var(--slate);text-transform:uppercase;margin-bottom:12px">Review &amp; deliver</div>
+                  <h1 style="font:var(--text-h2);font-family:var(--font-legend);margin:0 0 8px">Your playbook is <span style="background:var(--hello-yellow);padding:0 6px">{{ readyWord }}</span></h1>
+                  <p style="font:var(--text-body);color:var(--slate);margin:0">Review your playbook, tailor it for {{ customerName }}, and export it in your preferred format.</p>
+                </div>
+                <div style="display:flex;gap:10px;flex-shrink:0">
+                  <x-import component-from-global-scope="AutodeskDesignSystem_c63964.Button" variant="secondary" on-click="{{ openShare }}" hint-size="auto,40px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20a6.5 6.5 0 0113 0M16 4.5a3.5 3.5 0 010 7M21.5 20a6.5 6.5 0 00-4-6"></path></svg>Share for feedback</x-import>
+                  <button onClick="{{ toast_more }}" aria-label="More" style="width:40px;height:40px;border:1px solid var(--slate-200);border-radius:var(--radius-sm);background:var(--adsk-white);cursor:pointer;font-weight:700;letter-spacing:.1em" style-hover="opacity:.75">···</button>
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:minmax(0,1.4fr) minmax(320px,1fr);gap:32px;padding-bottom:24px">
+                <div>
+                  <x-import component-from-global-scope="AutodeskDesignSystem_c63964.Tabs" items="{{ reviewTabs }}" active="{{ reviewTab }}" on-change="{{ setReviewTab }}" hint-size="100%,40px"></x-import>
+                  <sc-if value="{{ reviewIsDoc }}" hint-placeholder-val="{{ true }}">
+                    <div style="margin-top:16px;border:1px solid var(--slate-200);border-radius:var(--radius-md);background:var(--warm-slate-100);overflow:hidden">
+                      <div style="display:flex;align-items:center;justify-content:center;gap:16px;height:44px;background:var(--adsk-white);border-bottom:1px solid var(--slate-200);font:var(--text-body-sm)">
+                        <button onClick="{{ prevPage }}" style="width:28px;height:28px;border:none;background:none;cursor:pointer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"></path></svg></button>
+                        <span>{{ previewPage }} / 42</span>
+                        <button onClick="{{ nextPage }}" style="width:28px;height:28px;border:none;background:none;cursor:pointer"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"></path></svg></button>
+                        <span style="width:1px;height:20px;background:var(--slate-200)"></span>
+                        <button onClick="{{ zoomOut }}" style="width:28px;height:28px;border:none;background:none;cursor:pointer">−</button><span style="min-width:44px;text-align:center">{{ zoom }}%</span><button onClick="{{ zoomIn }}" style="width:28px;height:28px;border:none;background:none;cursor:pointer">+</button>
+                      </div>
+                      <div style="padding:24px;display:flex;justify-content:center;overflow:auto">
+                        <div style="width:{{ zoomWidthDoc }};max-width:100%;aspect-ratio:1/1.2;background:var(--adsk-white);box-shadow:var(--shadow-card);padding:6% 7%;position:relative;overflow:hidden;display:flex;flex-direction:column;flex-shrink:0">
+                          <div style="display:flex;justify-content:space-between;align-items:center"><img src="assets/autodesk-logo.png" alt="" style="height:12px;width:auto"><span style="font:var(--text-caption);color:var(--slate)">Confidential · Draft</span></div>
+                          <div style="margin-top:26%;max-width:58%">
+                            <div style="font:700 clamp(18px,3.4vw,30px)/1.1 var(--font-legend);text-wrap:balance">Digital transformation playbook for {{ customerName }}</div>
+                            <div style="margin-top:12px;font:var(--text-body-sm);color:var(--adsk-black);max-width:90%;text-wrap:pretty">{{ coverSubtitle }}</div>
+                          </div>
+                          <img src="assets/cover.jpg" alt="" style="position:absolute;right:-8%;bottom:14%;width:52%;aspect-ratio:1;object-fit:cover;clip-path:polygon(35% 0,100% 0,100% 100%,0 100%)">
+                          <div style="margin-top:auto;display:flex;justify-content:space-between;font:var(--text-caption);color:var(--slate)"><span>{{ coverDate }}</span><span>Version 1.0</span></div>
+                        </div>
+                      </div>
+                    </div>
+                  </sc-if>
+                  <sc-if value="{{ reviewIsStructure }}" hint-placeholder-val="{{ false }}">
+                    <div style="margin-top:16px;border:1px solid var(--slate-200);border-radius:var(--radius-md);padding:8px">
+                      <sc-for list="{{ outlineFlat }}" as="o" hint-placeholder-count="10">
+                        <div style="display:flex;align-items:center;gap:10px;height:40px;padding:0 8px 0 {{ o.pad }};font:var(--text-body-sm);font-weight:{{ o.weight }};border-top:{{ o.borderTop }}"><span style="flex:1">{{ o.n }} {{ o.title }}</span><span style="color:var(--slate);font-weight:400">{{ o.count }} sources</span></div>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:16px">
+                  <div style="border:1px solid var(--slate-200);border-radius:var(--radius-lg);padding:20px;display:flex;gap:16px">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="flex-shrink:0"><path d="M4 7h10M18 7h2M4 12h2M10 12h10M4 17h8M16 17h4"></path><circle cx="16" cy="7" r="2"></circle><circle cx="8" cy="12" r="2"></circle><circle cx="14" cy="17" r="2"></circle></svg>
+                    <div style="display:flex;flex-direction:column;gap:12px;flex:1">
+                      <div><div style="font:var(--text-h4)">Tailor for {{ customerName }}</div><div style="font:var(--text-body-sm);color:var(--slate)">Adjust the playbook for your customer and audience.</div></div>
+                      <sc-for list="{{ tailor }}" as="t" hint-placeholder-count="6"><x-import component-from-global-scope="AutodeskDesignSystem_c63964.Checkbox" label="{{ t.label }}" checked="{{ t.checked }}" on-change="{{ t.toggle }}" hint-size="100%,20px"></x-import></sc-for>
+                    </div>
+                  </div>
+                  <div style="border:1px solid var(--slate-200);border-radius:var(--radius-lg);padding:20px;display:flex;gap:16px">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="flex-shrink:0"><circle cx="12" cy="12" r="9"></circle><path d="M8 12l3 3 5-6"></path></svg>
+                    <div style="display:flex;flex-direction:column;gap:12px;flex:1">
+                      <div><div style="font:var(--text-h4)">Readiness check</div><div style="font:var(--text-body-sm);color:var(--slate)">We've checked your playbook against key criteria.</div></div>
+                      <sc-for list="{{ readiness }}" as="r" hint-placeholder-count="5">
+                        <div style="display:flex;align-items:center;gap:10px;font:var(--text-body-sm)">
+                          <span style="width:18px;height:18px;border-radius:50%;background:{{ r.bg }};color:{{ r.fg }};display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="{{ r.path }}"></path></svg></span>
+                          <sc-if value="{{ r.ok }}" hint-placeholder-val="{{ true }}"><span style="font-weight:{{ r.weight }}">{{ r.label }}</span></sc-if>
+                          <sc-if value="{{ r.fail }}" hint-placeholder-val="{{ false }}"><button onClick="{{ r.fix }}" style="border:none;background:none;padding:0;cursor:pointer;font:var(--text-body-sm);color:var(--adsk-black);text-decoration:underline;text-align:left">{{ r.label }}</button><span style="font:var(--text-caption);color:var(--slate)">{{ r.hint }}</span></sc-if>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </div>
+                  <div style="border:1px solid var(--slate-200);border-radius:var(--radius-lg);padding:20px;display:flex;gap:16px">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="flex-shrink:0"><path d="M14 3H6a1 1 0 00-1 1v16a1 1 0 001 1h12a1 1 0 001-1V8z"></path><path d="M14 3v5h5M8 13h8M8 17h5"></path></svg>
+                    <div style="display:flex;flex-direction:column;gap:12px;flex:1;min-width:0">
+                      <div><div style="font:var(--text-h4)">Export and share</div><div style="font:var(--text-body-sm);color:var(--slate)">Choose a format and share with your team or customer.</div></div>
+                      <select value="{{ exportFormat }}" onChange="{{ setExportFormat }}" style="height:44px;padding:0 12px;border:1px solid var(--slate-200);border-radius:var(--radius-md);font:var(--text-body-sm);background:var(--adsk-white)">
+                        <sc-for list="{{ exportFormats }}" as="f" hint-placeholder-count="3"><option value="{{ f }}">{{ f }}</option></sc-for>
+                      </select>
+                      <div style="display:flex;gap:24px;flex-wrap:wrap">
+                        <x-import component-from-global-scope="AutodeskDesignSystem_c63964.Checkbox" label="Include source list" checked="{{ includeSources }}" on-change="{{ setIncludeSources }}" hint-size="auto,20px"></x-import>
+                        <x-import component-from-global-scope="AutodeskDesignSystem_c63964.Checkbox" label="Include comments" checked="{{ includeComments }}" on-change="{{ setIncludeComments }}" hint-size="auto,20px"></x-import>
+                      </div>
+                      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                        <x-import component-from-global-scope="AutodeskDesignSystem_c63964.Button" variant="primary" size="lg" disabled="{{ exporting }}" on-click="{{ exportPlaybook }}" style="{{ centerStyle }}" hint-size="100%,48px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 4v11M7 10l5 5 5-5M4 20h16"></path></svg>{{ exportLabel }}</x-import>
+                        <x-import component-from-global-scope="AutodeskDesignSystem_c63964.Button" variant="secondary" size="lg" on-click="{{ shareLink }}" style="{{ centerStyle }}" hint-size="100%,48px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"></path></svg>Share link</x-import>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 0 24px;border-top:1px solid var(--slate-100)">
+                <x-import component-from-global-scope="AutodeskDesignSystem_c63964.Button" variant="ghost" on-click="{{ goStep3 }}" hint-size="auto,40px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg>Back</x-import>
+                <x-import component-from-global-scope="AutodeskDesignSystem_c63964.Button" variant="ghost" on-click="{{ saveTemplate }}" hint-size="auto,40px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3H6a1 1 0 00-1 1v16a1 1 0 001 1h12a1 1 0 001-1V8z"></path><path d="M14 3v5h5"></path></svg><span style="text-decoration:underline">Save as template</span></x-import>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <!-- ===== MY PLAYBOOKS ===== -->
+      <sc-if value="{{ isPlaybooks }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="My playbooks" style="flex:1;overflow:auto;padding:32px 48px;animation:pm-fade .2s ease">
+          <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:24px">
+            <div><h1 style="font:var(--text-h2);font-family:var(--font-legend);margin:0 0 8px">My playbooks</h1><p style="font:var(--text-body);color:var(--slate);margin:0">{{ playbookCount }} playbooks · pick up where you left off.</p></div>
+            <x-import component-from-global-scope="AutodeskDesignSystem_c63964.Button" variant="primary" on-click="{{ newPlaybook }}" hint-size="auto,40px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg>Create playbook</x-import>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:16px">
+            <sc-for list="{{ pbFilters }}" as="f" hint-placeholder-count="4"><button onClick="{{ f.pick }}" style="height:32px;padding:0 14px;border:1px solid {{ f.border }};border-radius:var(--radius-sm);background:{{ f.bg }};color:{{ f.color }};font:var(--text-body-sm);cursor:pointer">{{ f.label }}</button></sc-for>
+          </div>
+          <div style="border:1px solid var(--slate-200);border-radius:var(--radius-md);overflow:hidden">
+            <div style="display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1.4fr) minmax(90px,auto) minmax(0,1fr) minmax(0,1fr);gap:16px;padding:12px 20px;background:var(--warm-slate-100);font:var(--text-label);color:var(--slate);text-transform:uppercase;letter-spacing:.04em">
+              <span>Playbook</span><span>Customer</span><span>Status</span><span>Stage</span><span>Updated</span>
+            </div>
+            <sc-for list="{{ playbooks }}" as="p" hint-placeholder-count="5">
+              <div onClick="{{ p.open }}" style="display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1.4fr) minmax(90px,auto) minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:center;padding:14px 20px;border-top:1px solid var(--slate-100);cursor:pointer;font:var(--text-body-sm)" style-hover="background:var(--warm-slate-100)">
+                <span style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.title }}</span>
+                <span style="color:var(--slate)">{{ p.customer }} · {{ p.industry }}</span>
+                <span><x-import component-from-global-scope="AutodeskDesignSystem_c63964.Badge" tone="{{ p.tone }}" hint-size="auto,22px">{{ p.status }}</x-import></span>
+                <span style="color:var(--slate)">{{ p.stage }}</span>
+                <span style="color:var(--slate)">{{ p.updated }}</span>
+              </div>
+            </sc-for>
+            <sc-if value="{{ playbooksEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:40px;text-align:center;font:var(--text-body-sm);color:var(--slate)">No playbooks in this view.</div></sc-if>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ===== KNOWLEDGE LIBRARY ===== -->
+      <sc-if value="{{ isLibrary }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="Knowledge library" style="flex:1;overflow:auto;padding:32px 48px;animation:pm-fade .2s ease">
+          <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:24px">
+            <div><h1 style="font:var(--text-h2);font-family:var(--font-legend);margin:0 0 8px">Knowledge library</h1><p style="font:var(--text-body);color:var(--slate);margin:0">Approved and reviewed sources the playbook engine draws from.</p></div>
+            <x-import component-from-global-scope="AutodeskDesignSystem_c63964.Button" variant="secondary" on-click="{{ toast_upload }}" hint-size="auto,40px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 16V5M7 10l5-5 5 5M4 20h16"></path></svg>Upload source</x-import>
+          </div>
+          <div style="display:flex;gap:12px;align-items:center;margin-bottom:20px;flex-wrap:wrap">
+            <div style="position:relative;flex:1;min-width:240px;max-width:420px">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="position:absolute;left:12px;top:12px;color:var(--slate)"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg>
+              <input value="{{ libQuery }}" onChange="{{ setLibQuery }}" placeholder="Search the library" style="width:100%;height:40px;padding:0 12px 0 38px;border:1px solid var(--slate-200);border-radius:var(--radius-md);font:var(--text-body-sm)">
+            </div>
+            <sc-for list="{{ libFilters }}" as="f" hint-placeholder-count="4"><button onClick="{{ f.pick }}" style="height:32px;padding:0 14px;border:1px solid {{ f.border }};border-radius:var(--radius-sm);background:{{ f.bg }};color:{{ f.color }};font:var(--text-body-sm);cursor:pointer">{{ f.label }}</button></sc-for>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px">
+            <sc-for list="{{ library }}" as="k" hint-placeholder-count="6">
+              <div onClick="{{ k.preview }}" style="display:flex;gap:12px;padding:16px;border:1px solid var(--slate-200);border-radius:var(--radius-lg);cursor:pointer;background:var(--adsk-white)" style-hover="box-shadow:var(--shadow-card)">
+                <span style="width:36px;height:36px;border-radius:var(--radius-sm);background:{{ k.typeBg }};color:{{ k.typeColor }};display:flex;align-items:center;justify-content:center;font:var(--text-label);flex-shrink:0">{{ k.typeLabel }}</span>
+                <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px">
+                  <span style="font:var(--text-body);font-weight:700;text-wrap:pretty">{{ k.title }}</span>
+                  <span style="font:var(--text-body-sm);color:var(--slate)">{{ k.org }} · {{ k.year }} · {{ k.pages }} pages</span>
+                  <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px"><sc-for list="{{ k.tags }}" as="t" hint-placeholder-count="2"><x-import component-from-global-scope="AutodeskDesignSystem_c63964.Badge" tone="{{ t.tone }}" hint-size="auto,22px">{{ t.label }}</x-import></sc-for></div>
+                  <span style="font:var(--text-caption);color:var(--slate);margin-top:6px">Used in {{ k.usedIn }} playbooks</span>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+          <sc-if value="{{ libraryEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:48px;text-align:center;font:var(--text-body-sm);color:var(--slate)">Nothing matches your search.</div></sc-if>
+        </div>
+      </sc-if>
+
+      <!-- ===== TEMPLATES ===== -->
+      <sc-if value="{{ isTemplates }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="Templates" style="flex:1;overflow:auto;padding:32px 48px;animation:pm-fade .2s ease">
+          <div style="margin-bottom:24px"><h1 style="font:var(--text-h2);font-family:var(--font-legend);margin:0 0 8px">Templates</h1><p style="font:var(--text-body);color:var(--slate);margin:0">Start from a proven structure. Templates pre-fill the outline and focus areas.</p></div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px">
+            <sc-for list="{{ templates }}" as="t" hint-placeholder-count="6">
+              <div style="display:flex;flex-direction:column;border:1px solid var(--slate-100);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-card);background:var(--adsk-white)">
+                <div style="height:120px;background:{{ t.bg }};position:relative;overflow:hidden">
+                  <sc-if value="{{ t.hasImage }}" hint-placeholder-val="{{ false }}"><img src="assets/cover.jpg" alt="" style="width:100%;height:100%;object-fit:cover"></sc-if>
+                  <span style="position:absolute;left:16px;bottom:12px;font:var(--text-label);color:{{ t.fg }};letter-spacing:.06em;text-transform:uppercase">{{ t.kind }}</span>
+                </div>
+                <div style="padding:20px;display:flex;flex-direction:column;gap:8px;flex:1">
+                  <div style="font:var(--text-h4)">{{ t.title }}</div>
+                  <div style="font:var(--text-body-sm);color:var(--slate);text-wrap:pretty">{{ t.desc }}</div>
+                  <div style="font:var(--text-caption);color:var(--slate);margin-top:auto">{{ t.sections }} sections · used {{ t.uses }} times</div>
+                  <div style="margin-top:8px"><x-import component-from-global-scope="AutodeskDesignSystem_c63964.Button" variant="secondary" size="sm" on-click="{{ t.use }}" hint-size="auto,32px">Use template</x-import></div>
+                </div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- ===== HELP ===== -->
+      <sc-if value="{{ isHelp }}" hint-placeholder-val="{{ false }}">
+        <div data-screen-label="Help" style="flex:1;overflow:auto;padding:32px 48px;animation:pm-fade .2s ease">
+          <h1 style="font:var(--text-h2);font-family:var(--font-legend);margin:0 0 8px">Help</h1>
+          <p style="font:var(--text-body);color:var(--slate);margin:0 0 24px;max-width:640px">How a playbook comes together, in four steps.</p>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;max-width:1000px">
+            <sc-for list="{{ helpSteps }}" as="h" hint-placeholder-count="4">
+              <div style="border:1px solid var(--slate-200);border-radius:var(--radius-lg);padding:20px;display:flex;flex-direction:column;gap:8px">
+                <span style="font:var(--text-h2);font-family:var(--font-legend)">{{ h.n }}</span>
+                <span style="font:var(--text-h4)">{{ h.title }}</span>
+                <span style="font:var(--text-body-sm);color:var(--slate);text-wrap:pretty">{{ h.desc }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+    </main>
+  </div>
+
+  <!-- Share dialog -->
+  <x-import component-from-global-scope="AutodeskDesignSystem_c63964.Dialog" open="{{ shareOpen }}" title="Share for feedback" body="{{ shareBody }}" primary-label="Send invitation" on-close="{{ closeShare }}" on-primary="{{ sendShare }}" hint-size="0,0"></x-import>
+
+  <!-- Toast -->
+  <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+    <div style="position:absolute;left:50%;bottom:24px;transform:translateX(-50%);background:var(--adsk-black);color:var(--adsk-white);padding:12px 20px;border-radius:var(--radius-md);font:var(--text-body-sm);box-shadow:var(--shadow-card);animation:pm-fade .2s ease;display:flex;align-items:center;gap:12px;z-index:10">
+      {{ toast }}
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;startStep&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;default&quot;:&quot;1&quot;,&quot;options&quot;:[&quot;1&quot;,&quot;2&quot;,&quot;3&quot;,&quot;4&quot;],&quot;tsType&quot;:&quot;'1'|'2'|'3'|'4'&quot;,&quot;section&quot;:&quot;Prototype&quot;},&quot;showAiSuggestions&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Prototype&quot;}}">
+const ICONS = {
+  plus: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>',
+  doc: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 3H6a1 1 0 00-1 1v16a1 1 0 001 1h12a1 1 0 001-1V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>',
+  lib: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M8 14h8M8 17h5"/></svg>',
+  grid: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/></svg>',
+  help: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 015 0c0 1.5-2.5 2-2.5 3.5M12 17h.01"/></svg>',
+  link: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/></svg>',
+  bold: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M7 5h6a3.5 3.5 0 010 7H7zM7 12h7a3.5 3.5 0 010 7H7z"/></svg>',
+  italic: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 5h5M5 19h5M14 5l-4 14"/></svg>',
+  underline: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 4v7a5 5 0 0010 0V4M5 20h14"/></svg>',
+  ul: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg>',
+  ol: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 6h10M10 12h10M10 18h10M4 5l1-1v4M4 11.5c1-1 2 0 1 1L4 14h2M4 17h1.5a.75.75 0 010 1.5H5a.75.75 0 010 1.5h.5"/></svg>',
+  alignL: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h10M4 18h16"/></svg>',
+  alignC: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M7 12h10M4 18h16"/></svg>',
+  alignR: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M10 12h10M4 18h16"/></svg>',
+  linkS: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/></svg>',
+  comment: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 5h16v11H9l-5 4z"/></svg>'
+};
+const TYPE = {
+  pdf: { label: 'PDF', bg: 'var(--dusk-100)', color: 'var(--dusk-700)' },
+  docx: { label: 'W', bg: 'var(--twilight-100)', color: 'var(--twilight-700)' },
+  pptx: { label: 'P', bg: 'var(--dawn-100)', color: 'var(--dawn-700)' },
+  link: { label: 'URL', bg: 'var(--slate-100)', color: 'var(--adsk-black)' }
+};
+const SOURCES = [
+  { id: 's1', type: 'pdf', title: 'Document management implementation guide', org: 'Technical Advisory', year: 2026, pages: 42, usedIn: 14, subtitle: 'Accelerating project delivery through connected document management', tags: [['Approved','positive'],['Current','info'],['High relevance','info']], relevantFor: 'Adoption vision · Key outcomes' },
+  { id: 's2', type: 'docx', title: 'Project management playbook', org: 'Technical Advisory', year: 2025, pages: 68, usedIn: 22, subtitle: 'Standard delivery approach for construction cloud programs', tags: [['Approved','positive'],['High relevance','info']], relevantFor: 'Delivery approach · Governance' },
+  { id: 's3', type: 'pdf', title: 'Customer case study – document workflow', org: 'Customer success', year: 2024, pages: 12, usedIn: 6, subtitle: 'How a 4,000-person consultancy moved to a common data environment', tags: [['Customer-specific','neutral'],['Medium relevance','warning']], relevantFor: 'Business value · Strategic alignment' },
+  { id: 's4', type: 'pptx', title: 'Workflow guide', org: 'Product marketing', year: 2022, pages: 36, usedIn: 31, subtitle: 'Cloud workflows from design to handover', tags: [['Older version','neutral'],['Low relevance','critical']], relevantFor: 'Docs workflow' },
+  { id: 's5', type: 'docx', title: 'Document control best practices', org: 'Technical Advisory', year: 2023, pages: 24, usedIn: 9, subtitle: 'Naming, versioning and approval patterns that scale', tags: [['Medium relevance','warning']], relevantFor: 'Docs workflow · Governance' },
+  { id: 's6', type: 'link', title: 'ISO 19650 guidance on information management', org: 'External source', year: 2022, pages: 1, usedIn: 17, subtitle: 'Organization and digitization of information about buildings and civil engineering works', tags: [['Medium relevance','warning']], relevantFor: 'Standards · Governance' },
+  { id: 's7', type: 'pdf', title: 'Change management framework for AEC firms', org: 'Technical Advisory', year: 2025, pages: 30, usedIn: 11, subtitle: 'Sponsorship, champions and adoption measurement', tags: [['Approved','positive'],['High relevance','info']], relevantFor: 'Change management · Training' },
+  { id: 's8', type: 'pptx', title: 'Adoption KPI catalogue', org: 'Customer success', year: 2026, pages: 18, usedIn: 8, subtitle: 'Leading and lagging indicators for platform adoption', tags: [['Approved','positive'],['Current','info']], relevantFor: 'Adoption & KPIs' }
+];
+const CHAPTERS = [
+  { id: 'c1', n: '1.', title: 'Executive Summary', status: 'ok', open: false, sections: [] },
+  { id: 'c2', n: '2.', title: 'Business Strategy', status: 'ok', open: true, sections: [
+    { id: 'c2s1', n: '2.1', title: 'Adoption Vision', status: 'ok' }, { id: 'c2s2', n: '2.2', title: 'Business Outcomes', status: 'ok' }, { id: 'c2s3', n: '2.3', title: 'Governance', status: 'ok' } ] },
+  { id: 'c3', n: '3.', title: 'Project Management', status: 'none', open: true, sections: [
+    { id: 'c3s1', n: '3.1', title: 'Project Setup', status: 'ok' }, { id: 'c3s2', n: '3.2', title: 'Docs Workflow', status: 'ok' }, { id: 'c3s3', n: '3.3', title: 'Build Workflow', status: 'ok' }, { id: 'c3s4', n: '3.4', title: 'Adoption & KPIs', status: 'warn' } ] },
+  { id: 'c4', n: '4.', title: 'Technology & Workflows', status: 'ok', open: false, sections: [] },
+  { id: 'c5', n: '5.', title: 'Change Management', status: 'ok', open: false, sections: [] },
+  { id: 'c6', n: '6.', title: 'Training & Adoption', status: 'ok', open: false, sections: [] },
+  { id: 'c7', n: '7.', title: 'Implementation Roadmap', status: 'ok', open: false, sections: [] },
+  { id: 'c8', n: '8.', title: 'Appendix', status: 'warn', open: false, sections: [] }
+];
+const INITIAL_SEL = { c1: ['s1','s2','s7'], c2: ['s1','s3'], c2s1: ['s1','s3'], c2s2: ['s3','s8'], c2s3: ['s2','s6'], c3s1: ['s2'], c3s2: ['s1','s2'], c3s3: ['s4'], c3s4: ['s8'], c4: ['s1','s4','s5'], c5: ['s7'], c6: ['s7'], c7: ['s2'], c8: ['s6'] };
+const DRAFT = (title, customer) => [
+  `# ${title}`,
+  `This section sets out how ${customer} will approach ${title.toLowerCase()} as part of its digital transformation. It draws on approved guidance and adapts it to the customer's size, industry and stated objective.`,
+  `## Key objectives`,
+  `- Establish a shared understanding of the target state across leadership and project teams`,
+  `- Define the roles, decisions and checkpoints needed to move from pilot to standard practice`,
+  `- Agree the measures that show progress within the first two quarters`,
+  `## Expected outcomes`,
+  `- Consistent ways of working across offices and disciplines`,
+  `- Fewer handovers lost between design, construction and operations`,
+  `- A clear owner for each part of the rollout`,
+  `## How to use this playbook`,
+  `Read this section with the project sponsor before the kickoff workshop. Each recommendation links back to its source so it can be checked and tailored.`
+].join('\n');
+const PLAYBOOKS = [
+  { id: 'p1', title: 'Digital transformation playbook', customer: 'Northwind Engineering', industry: 'AECO', status: 'Draft', tone: 'warning', stage: 'Edit & create', step: 3, updated: 'Today, 09:40' },
+  { id: 'p2', title: 'Common data environment rollout', customer: 'Harbor & Vale', industry: 'AECO', status: 'In review', tone: 'info', stage: 'Review & deliver', step: 4, updated: 'Yesterday' },
+  { id: 'p3', title: 'Design automation adoption', customer: 'Meridian Manufacturing', industry: 'D&M', status: 'Delivered', tone: 'positive', stage: 'Delivered', step: 4, updated: '3 Sep 2026' },
+  { id: 'p4', title: 'BIM standards playbook', customer: 'Cobalt Infrastructure', industry: 'AECO', status: 'Draft', tone: 'warning', stage: 'Find & trust', step: 2, updated: '28 Aug 2026' },
+  { id: 'p5', title: 'Media pipeline modernization', customer: 'Studio Lark', industry: 'M&E', status: 'Delivered', tone: 'positive', stage: 'Delivered', step: 4, updated: '12 Aug 2026' }
+];
+const TEMPLATES = [
+  { id: 't1', kind: 'Recommended', title: 'Digital transformation', desc: 'Full eight-chapter structure from vision to roadmap. Best for enterprise programs.', sections: 8, uses: 42, bg: 'var(--adsk-black)', fg: 'var(--adsk-white)', hasImage: true },
+  { id: 't2', kind: 'Focused', title: 'Common data environment', desc: 'Document control, naming, workflows and governance for a CDE rollout.', sections: 5, uses: 27, bg: 'var(--warm-slate-100)', fg: 'var(--adsk-black)', hasImage: false },
+  { id: 't3', kind: 'Focused', title: 'Change management', desc: 'Sponsorship, champions network, communication plan and adoption measures.', sections: 4, uses: 19, bg: 'var(--warm-slate-100)', fg: 'var(--adsk-black)', hasImage: false },
+  { id: 't4', kind: 'Short form', title: 'Executive briefing', desc: 'Two-page summary for leadership: outcomes, investment, timeline.', sections: 3, uses: 33, bg: 'var(--adsk-black)', fg: 'var(--adsk-white)', hasImage: false },
+  { id: 't5', kind: 'Industry', title: 'Manufacturing design automation', desc: 'Data model, automation candidates, pilot selection and scaling plan.', sections: 6, uses: 11, bg: 'var(--warm-slate-100)', fg: 'var(--adsk-black)', hasImage: false },
+  { id: 't6', kind: 'Blank', title: 'Start from scratch', desc: 'Empty outline. Add chapters and sections as you go.', sections: 0, uses: 8, bg: 'var(--warm-slate-100)', fg: 'var(--adsk-black)', hasImage: false }
+];
+
+class Component extends DCLogic {
+  state = {
+    view: 'create', step: 1, finding: false, drafting: false, regenerating: false, exporting: false,
+    brief: { customer: 'Northwind Engineering', industry: 'AECO (Architecture, Engineering, Construction & Operations)', size: 2, objective: 'Support the adoption of a connected document and project management platform across the organization, with a focus on business strategy and project management.', focus: ['Business strategy'], contextOpen: false, context: '', logo: false, color: null,
+      sources: [ { id: 'b1', type: 'doc', title: 'Customer digital strategy 2026', url: 'https://intranet.example.com/sites/strategy' }, { id: 'b2', type: 'link', title: 'Product overview', url: 'https://www.autodesk.com/products' } ] },
+    focusInputOpen: false, focusDraft: '',
+    chapters: CHAPTERS, selected: 'c3s2', sel: INITIAL_SEL, previewId: 's1', previewTab: 'Preview', previewPage: 1, zoom: 100, knowledgeQuery: '', filterOn: false,
+    drafts: {}, editRaw: false, rightTab: 'Sources', chat: [{ role: 'ai', text: 'I can rewrite, shorten or tailor this section. What would you like to change?' }], chatDraft: '',
+    comments: [{ initials: 'AM', author: 'Aleksandra Marjanovic ', when: '2h ago', text: 'Can we lead with the governance model here?' }], commentDraft: '',
+    reviewTab: 'Document preview', tailor: [true, true, true, true, true, false], exportFormat: 'Microsoft Word (.docx)', includeSources: false, includeComments: false,
+    shareOpen: false, toast: null, winW: typeof window !== 'undefined' ? window.innerWidth : 1440, pbFilter: 'All', libQuery: '', libFilter: 'All', savedAgo: 'Last saved 2 minutes ago', suggestionUsed: false
+  };
+  t;
+  showToast(msg) { clearTimeout(this.t); this.setState({ toast: msg }); this.t = setTimeout(() => this.setState({ toast: null }), 2600); }
+  findSection(id) { for (const c of this.state.chapters) { if (c.id === id) return c; const s = c.sections.find(x => x.id === id); if (s) return s; } return this.state.chapters[0]; }
+  updBrief(patch) { this.setState(s => ({ brief: { ...s.brief, ...patch } })); }
+  goStep(n) { this.setState({ step: n, view: 'create' }); }
+  addFocus(label) { this.setState(s => s.brief.focus.includes(label) ? {} : { brief: { ...s.brief, focus: [...s.brief.focus, label] }, focusInputOpen: false, focusDraft: '' }); }
+  currentDraft() { const sec = this.findSection(this.state.selected); return this.state.drafts[sec.id] ?? DRAFT(sec.title, this.state.brief.customer || 'the customer'); }
+  parseBlocks(text) {
+    const out = []; let ul = null;
+    for (const raw of text.split('\n')) {
+      const line = raw.trim(); if (!line) { ul = null; continue; }
+      if (line.startsWith('- ')) { if (!ul) { ul = { type: 'ul', items: [] }; out.push(ul); } ul.items.push(line.slice(2)); continue; }
+      ul = null;
+      if (line.startsWith('## ')) out.push({ type: 'h2', text: line.slice(3) });
+      else if (line.startsWith('# ')) out.push({ type: 'h1', text: line.slice(2) });
+      else out.push({ type: 'p', text: line });
+    }
+    return out;
+  }
+  sendChat(text) {
+    const msg = (text ?? this.state.chatDraft).trim(); if (!msg) return;
+    const sec = this.findSection(this.state.selected);
+    this.setState(s => ({ chat: [...s.chat, { role: 'user', text: msg }], chatDraft: '' }));
+    setTimeout(() => this.setState(s => ({ chat: [...s.chat, { role: 'ai', text: `Here is a revised version of "${sec.title}" that ${msg.toLowerCase().replace(/[.?!]$/, '')}. Review the draft on the left; I kept every source citation intact.` }] })), 700);
+  }
+  renderVals() {
+    const s = this.state, p = this.props, b = s.brief;
+    const startStep = p.startStep ? Number(p.startStep) : null;
+    const showAI = p.showAiSuggestions ?? true;
+    const step = s.step;
+    const narrow = s.winW < 1180;
+    const customer = b.customer.trim() || 'the customer';
+    const sec = this.findSection(s.selected);
+    const secSel = s.sel[sec.id] || [];
+    const byId = id => SOURCES.find(x => x.id === id);
+    const tagObjs = src => src.tags.map(([label, tone]) => ({ label, tone }));
+    const srcView = src => ({ ...src, tags: tagObjs(src), typeLabel: TYPE[src.type].label, typeBg: TYPE[src.type].bg, typeColor: TYPE[src.type].color });
+    const countFor = id => (s.sel[id] || []).length;
+    const statusBg = st => st === 'ok' ? 'var(--morning-600)' : st === 'warn' ? 'var(--dawn)' : 'var(--slate-300)';
+    const nav = [['create','Create playbook','plus'],['playbooks','My playbooks','doc'],['library','Knowledge library','lib'],['templates','Templates','grid']];
+    const outline = [];
+    s.chapters.forEach((c, ci) => {
+      const active = s.selected === c.id;
+      outline.push({ key: c.id, n: c.n, title: c.title, count: c.sections.length ? c.sections.reduce((a, x) => a + countFor(x.id), 0) : countFor(c.id), statusBg: statusBg(c.status), isChapter: c.sections.length > 0, rot: c.open ? '90deg' : '0deg', pad: c.sections.length ? '4px' : '32px', bg: active ? 'var(--warm-slate-300)' : 'transparent', color: 'var(--adsk-black)', weight: 700, borderTop: ci ? '1px solid var(--slate-100)' : 'none', mt: ci ? '8px' : '0', iconColor: active ? 'var(--adsk-black)' : 'var(--slate)',
+        select: () => this.setState({ selected: c.id, previewId: (s.sel[c.id] || [])[0] || null }),
+        toggle: e => { e.stopPropagation(); this.setState(st => ({ chapters: st.chapters.map(x => x.id === c.id ? { ...x, open: !x.open } : x) })); } });
+      if (c.open) c.sections.forEach(x => { const a = s.selected === x.id; outline.push({ key: x.id, n: x.n, title: x.title, count: countFor(x.id), statusBg: statusBg(x.status), isChapter: false, pad: '32px', bg: a ? 'var(--warm-slate-300)' : 'transparent', color: 'var(--adsk-black)', weight: a ? 700 : 400, borderTop: 'none', mt: '0', iconColor: 'var(--slate)', select: () => this.setState({ selected: x.id, previewId: (s.sel[x.id] || [])[0] || null }) }); });
+    });
+    const outlineFlat = [];
+    s.chapters.forEach((c, ci) => { const a = s.selected === c.id; outlineFlat.push({ key: c.id, n: c.n, title: c.title, indent: '', count: c.sections.length ? c.sections.reduce((acc, x) => acc + countFor(x.id), 0) : countFor(c.id), pad: '8px', weight: 700, bg: a ? 'var(--warm-slate-100)' : 'transparent', mt: ci ? '8px' : '0', borderTop: ci ? '1px solid var(--slate-100)' : 'none', iconColor: a ? 'var(--adsk-black)' : 'var(--slate)', select: () => this.setState({ selected: c.id, editRaw: false }) });
+      c.sections.forEach(x => { const ax = s.selected === x.id; outlineFlat.push({ key: x.id, n: x.n, title: x.title, indent: '\u00a0\u00a0\u00a0\u00a0', count: countFor(x.id), pad: '32px', weight: 400, bg: ax ? 'var(--warm-slate-100)' : 'transparent', mt: '0', borderTop: 'none', iconColor: 'var(--slate)', select: () => this.setState({ selected: x.id, editRaw: false }) }); }); });
+    const q = s.knowledgeQuery.toLowerCase();
+    const knowledge = SOURCES.filter(x => (!s.filterOn || x.tags.some(t => t[0] === 'Approved')) && (!q || x.title.toLowerCase().includes(q) || x.org.toLowerCase().includes(q))).map(x => { const checked = secSel.includes(x.id), isPrev = s.previewId === x.id; return { ...srcView(x), checked, border: isPrev ? 'var(--adsk-black)' : 'var(--slate-200)', bg: isPrev ? 'var(--warm-slate-100)' : 'var(--adsk-white)', preview: () => this.setState({ previewId: x.id, previewPage: 1 }),
+      toggle: () => this.setState(st => { const cur = st.sel[sec.id] || []; return { sel: { ...st.sel, [sec.id]: cur.includes(x.id) ? cur.filter(i => i !== x.id) : [...cur, x.id] } }; }) }; });
+    const preview = s.previewId ? srcView(byId(s.previewId)) : null;
+    const previewUsed = preview ? secSel.includes(preview.id) : false;
+    const draftText = this.currentDraft();
+    const blocks = this.parseBlocks(draftText).map(bk => ({ ...bk, isH1: bk.type === 'h1', isH2: bk.type === 'h2', isP: bk.type === 'p', isUl: bk.type === 'ul' }));
+    const wordCount = draftText.replace(/[#-]/g, '').split(/\s+/).filter(Boolean).length;
+    const sizeDefs = [['Small','< 1,000'],['Medium','1,000 – 10,000'],['Large','10,000 – 50,000'],['Enterprise','> 50,000']];
+    const tailorLabels = [`Use ${customer} terminology and branding`, `Tailor for ${b.industry.split(' ')[0]} industry context`, `Highlight relevance for a ${sizeDefs[b.size][0].toLowerCase()} organization`, 'Focus on the selected products and workflows', `Emphasize ${b.focus.length ? b.focus.map(f => f.toLowerCase()).join(' and ') : 'the selected focus areas'}`, 'Create executive summary version (shorter)'];
+    const totalSelected = Object.values(s.sel).reduce((a, x) => a + x.length, 0);
+    const sectionsWithSources = Object.values(s.sel).filter(x => x.length).length;
+    const thinSections = s.chapters.flatMap(c => [c.status === 'warn' ? c : null, ...c.sections.filter(x => x.status === 'warn')]).filter(Boolean);
+    const warnCount = thinSections.length;
+    const briefInvalid = !b.customer.trim() || !b.objective.trim();
+    const pbF = ['All','Draft','In review','Delivered'];
+    const playbooks = PLAYBOOKS.filter(x => s.pbFilter === 'All' || x.status === s.pbFilter).map(x => ({ ...x, open: () => this.setState({ view: 'create', step: x.step, brief: { ...b, customer: x.customer } }) }));
+    const libF = ['All','Approved','Current','External'];
+    const lq = s.libQuery.toLowerCase();
+    const library = SOURCES.filter(x => (s.libFilter === 'All' || (s.libFilter === 'External' ? x.type === 'link' : x.tags.some(t => t[0] === s.libFilter))) && (!lq || x.title.toLowerCase().includes(lq) || x.org.toLowerCase().includes(lq))).map(x => ({ ...srcView(x), preview: () => this.setState({ view: 'create', step: 2, previewId: x.id, previewPage: 1 }) }));
+    const chip = (label, active, pick) => ({ label, pick, bg: active ? 'var(--adsk-black)' : 'var(--adsk-white)', color: active ? 'var(--adsk-white)' : 'var(--adsk-black)', border: active ? 'var(--adsk-black)' : 'var(--slate-200)' });
+    const mkStep = (n, label) => { const done = n < step, active = n === step; return { n, label, done, notDone: !done, notFirst: n > 1, notLast: n < 4, bg: active || done ? 'var(--adsk-black)' : 'var(--adsk-white)', color: active || done ? 'var(--adsk-white)' : 'var(--adsk-black)', border: active || done ? 'var(--adsk-black)' : 'var(--slate-300)', lineBg: n <= step ? 'var(--adsk-black)' : 'var(--slate-200)', lineBgNext: n < step ? 'var(--adsk-black)' : 'var(--slate-200)', weight: active ? 700 : 400, labelColor: active ? 'var(--adsk-black)' : 'var(--slate)', go: () => { if (n <= step || !briefInvalid) this.goStep(n); } }; };
+    const toolbarDefs = [['bold','Bold'],['italic','Italic'],['underline','Underline'],['ul','Bulleted list'],['ol','Numbered list'],['alignL','Align left'],['alignC','Align center'],['alignR','Align right'],['linkS','Insert link'],['comment','Comment']];
+    const previewMeta = preview ? [['Type', preview.type.toUpperCase()], ['Owner', preview.org], ['Published', String(preview.year)], ['Pages', String(preview.pages)], ['Used in', `${preview.usedIn} playbooks`], ['Status', preview.tags[0].label]].map(([k, v]) => ({ k, v })) : [];
+    const shareRecipients = 2;
+    return {
+      isCreate: s.view === 'create', isPlaybooks: s.view === 'playbooks', isLibrary: s.view === 'library', isTemplates: s.view === 'templates', isHelp: s.view === 'help',
+      step1: step === 1, step2: step === 2, step3: step === 3, step4: step === 4,
+      navItems: nav.map(([id, label, ic]) => ({ id, label, icon: { __html: ICONS[ic] }, bg: s.view === id ? 'var(--warm-slate-300)' : 'transparent', go: () => this.setState({ view: id }) })),
+      steps: [mkStep(1, 'Define brief'), mkStep(2, 'Find & trust'), mkStep(3, 'Edit & create'), mkStep(4, 'Review & deliver')],
+      brief: b, customerName: customer,
+      setCustomer: e => this.updBrief({ customer: e.target.value }), clearCustomer: () => this.updBrief({ customer: '' }),
+      toggleLogo: () => { this.updBrief({ logo: !b.logo }); this.showToast(b.logo ? 'Customer logo removed' : 'Customer logo added (placeholder)'); }, logoBg: b.logo ? 'var(--warm-slate-100)' : 'var(--adsk-white)', logoLabel: b.logo ? 'Logo added' : 'Add customer logo',
+      toggleColor: () => { const next = b.color ? null : 'var(--twilight)'; this.updBrief({ color: next }); }, brandColor: b.color || 'var(--adsk-white)',
+      industries: ['AECO (Architecture, Engineering, Construction & Operations)', 'D&M (Design & Manufacturing)', 'M&E (Media & Entertainment)', 'Public sector', 'Other'],
+      setIndustry: e => this.updBrief({ industry: e.target.value }),
+      sizes: sizeDefs.map(([label, range], i) => { const on = b.size === i; return { label, range, border: on ? 'var(--adsk-black)' : 'var(--slate-300)', dot: on ? 'var(--adsk-black)' : 'transparent', weight: on ? 700 : 400, pick: () => this.updBrief({ size: i }) }; }),
+      setObjective: e => this.updBrief({ objective: e.target.value.slice(0, 500) }), objectiveCount: b.objective.length,
+      focusSelected: b.focus.map(f => ({ label: f, remove: () => this.updBrief({ focus: b.focus.filter(x => x !== f) }) })),
+      focusSuggestions: ['Business strategy', 'Project management', 'Change management', 'Document control'].filter(x => !b.focus.includes(x)).map(label => ({ label, add: () => this.addFocus(label) })),
+      focusInputOpen: s.focusInputOpen, focusInputClosed: !s.focusInputOpen, focusDraft: s.focusDraft, openFocusInput: () => this.setState({ focusInputOpen: true }), setFocusDraft: e => this.setState({ focusDraft: e.target.value }),
+      focusKey: e => { if (e.key === 'Enter' && s.focusDraft.trim()) this.addFocus(s.focusDraft.trim()); if (e.key === 'Escape') this.setState({ focusInputOpen: false, focusDraft: '' }); },
+      briefSources: b.sources.map(x => ({ ...x, icon: { __html: x.type === 'link' ? ICONS.link : ICONS.doc }, setTitle: e => this.updBrief({ sources: b.sources.map(y => y.id === x.id ? { ...y, title: e.target.value } : y) }), setUrl: e => this.updBrief({ sources: b.sources.map(y => y.id === x.id ? { ...y, url: e.target.value } : y) }), remove: () => this.updBrief({ sources: b.sources.filter(y => y.id !== x.id) }) })),
+      addBriefSource: () => this.updBrief({ sources: [...b.sources, { id: 'b' + Date.now(), type: 'link', title: 'New source', url: '' }] }),
+      toggleOptional: () => this.updBrief({ contextOpen: !b.contextOpen }), optionalOpen: b.contextOpen, optionalRot: b.contextOpen ? '90deg' : '0deg', setContext: e => this.updBrief({ context: e.target.value }),
+      optionalSummary: b.contextOpen ? '' : `${b.sources.length} source${b.sources.length === 1 ? '' : 's'}${b.context.trim() ? ' · context added' : ''}`,
+      briefInvalid, finding: s.finding || briefInvalid, findLabel: s.finding ? 'Finding relevant knowledge…' : 'Find relevant knowledge',
+      findKnowledge: () => { if (briefInvalid) return; this.setState({ finding: true }); setTimeout(() => this.setState({ finding: false, step: 2 }), 900); },
+      cancel: () => this.setState({ view: 'playbooks' }),
+      // step 2
+      step2Cols: preview ? 'minmax(0,0.9fr) minmax(0,1.3fr) minmax(0,1.1fr)' : 'minmax(0,0.9fr) minmax(0,2fr)',
+      step3Cols: narrow ? 'minmax(0,1.6fr) minmax(280px,1fr)' : 'minmax(220px,0.8fr) minmax(320px,1.8fr) minmax(280px,1fr)',
+      narrow, wide: !narrow, selectedId: sec.id, selectById: e => this.setState({ selected: e.target.value, editRaw: false }),
+      outline, outlineFlat, selectedTitle: sec.title, selectedN: sec.n,
+      addChapter: () => { const n = s.chapters.length + 1; const id = 'c' + n + Date.now(); this.setState(st => ({ chapters: [...st.chapters, { id, n: n + '.', title: 'New chapter', status: 'none', open: false, sections: [] }], selected: id })); },
+      addSection: () => { const c = s.chapters.find(x => x.id === sec.id) || s.chapters.find(x => x.sections.some(y => y.id === sec.id)); if (!c) return; const idx = c.sections.length + 1, id = c.id + 's' + Date.now(); this.setState(st => ({ chapters: st.chapters.map(x => x.id === c.id ? { ...x, open: true, sections: [...x.sections, { id, n: `${c.n.replace('.', '')}.${idx}`, title: 'New section', status: 'none' }] } : x), selected: id })); },
+      knowledge, knowledgeCount: knowledge.length, knowledgeEmpty: knowledge.length === 0, knowledgeQuery: s.knowledgeQuery, setKnowledgeQuery: e => this.setState({ knowledgeQuery: e.target.value }),
+      toggleFilter: () => this.setState({ filterOn: !s.filterOn }), filterBg: s.filterOn ? 'var(--warm-slate-300)' : 'var(--adsk-white)', filterLabel: s.filterOn ? 'Approved only' : 'Filter',
+      hasPreview: !!preview, preview, closePreview: () => this.setState({ previewId: null }),
+      previewTabs: ['Preview', 'Metadata'], previewTab: s.previewTab, setPreviewTab: t => this.setState({ previewTab: t }), previewIsPreview: s.previewTab === 'Preview', previewIsMeta: s.previewTab === 'Metadata', previewMeta,
+      previewPage: s.previewPage, prevPage: () => this.setState({ previewPage: Math.max(1, s.previewPage - 1) }), nextPage: () => this.setState({ previewPage: Math.min(preview ? preview.pages : 42, s.previewPage + 1) }),
+      zoom: s.zoom, zoomIn: () => this.setState({ zoom: Math.min(200, s.zoom + 25) }), zoomOut: () => this.setState({ zoom: Math.max(50, s.zoom - 25) }), zoomWidth: (s.zoom * 2.6) + 'px', zoomWidthDoc: (s.zoom * 5.6) + 'px',
+      openOriginal: () => this.showToast('Opening original in a new tab'),
+      useVariant: previewUsed ? 'secondary' : 'primary', useLabel: previewUsed ? 'Used in this section' : 'Use in this section', growStyle: { flex: 1, justifyContent: 'center' },
+      toggleUsePreview: () => { if (!preview) return; this.setState(st => { const cur = st.sel[sec.id] || []; return { sel: { ...st.sel, [sec.id]: cur.includes(preview.id) ? cur.filter(i => i !== preview.id) : [...cur, preview.id] } }; }); },
+      totalSelected, sectionsWithSources, drafting: s.drafting, draftLabel: s.drafting ? 'Creating draft…' : 'Create draft',
+      createDraft: () => { this.setState({ drafting: true }); setTimeout(() => this.setState({ drafting: false, step: 3, selected: 'c1', editRaw: false }), 1000); },
+      goStep1: () => this.goStep(1), goStep2: () => this.goStep(2), goStep3: () => this.goStep(3), goStep4: () => this.goStep(4),
+      // step 3
+      regenerating: s.regenerating, regenLabel: s.regenerating ? 'Regenerating…' : 'Regenerate section', draftOpacity: s.regenerating ? 0.4 : 1,
+      regenerate: () => { this.setState({ regenerating: true }); setTimeout(() => this.setState(st => ({ regenerating: false, drafts: { ...st.drafts, [sec.id]: DRAFT(sec.title, customer).replace('This section sets out', 'Regenerated: this section describes') }, savedAgo: 'Saved just now' })), 900); },
+      toolbar: toolbarDefs.map(([k, title]) => ({ title, icon: { __html: ICONS[k] }, bg: k === 'alignL' ? 'var(--warm-slate-100)' : 'transparent', click: () => this.showToast(`${title} applies to the selected text`) })),
+      editRaw: s.editRaw, editRich: !s.editRaw, editModeLabel: s.editRaw ? 'Editing text' : 'Formatted view', editToggleLabel: s.editRaw ? 'Done' : 'Edit text', toggleEditMode: () => this.setState({ editRaw: !s.editRaw, savedAgo: s.editRaw ? 'Saved just now' : s.savedAgo }),
+      draftText, setDraftText: e => this.setState(st => ({ drafts: { ...st.drafts, [sec.id]: e.target.value } })), blocks, wordCount, savedLabel: s.savedAgo,
+      toast_changes: () => this.showToast('Change history opens in a side panel'),
+      rightTabs: ['Sources', 'Assistant', 'Comments'], rightTab: s.rightTab, setRightTab: t => this.setState({ rightTab: t }), rightIsSources: s.rightTab === 'Sources', rightIsAI: s.rightTab === 'Assistant', rightIsComments: s.rightTab === 'Comments',
+      sectionSources: secSel.map(byId).filter(Boolean).map(x => ({ ...srcView(x), openPreview: () => this.setState({ step: 2, previewId: x.id, previewPage: 1, previewTab: 'Preview' }), removeFromSection: e => { e.stopPropagation(); this.setState(st => ({ sel: { ...st.sel, [sec.id]: (st.sel[sec.id] || []).filter(i => i !== x.id) } })); }, _r: () => this.setState(st => ({ sel: { ...st.sel, [sec.id]: (st.sel[sec.id] || []).filter(i => i !== x.id) } })) })), sectionSourceCount: secSel.length, noSectionSources: secSel.length === 0,
+      showSuggestion: showAI && !s.suggestionUsed,
+      insertSuggestion: () => this.setState(st => ({ suggestionUsed: true, drafts: { ...st.drafts, [sec.id]: this.currentDraft().replace(`# ${sec.title}\n`, `# ${sec.title}\n${customer} is a ${sizeDefs[b.size][0].toLowerCase()} organization in ${b.industry.split(' ')[0]}. This playbook supports its objective: ${b.objective.trim() || 'a successful digital transformation'}\n`) } })),
+      chat: s.chat.map(m => ({ ...m, align: m.role === 'user' ? 'flex-end' : 'flex-start', bg: m.role === 'user' ? 'var(--adsk-black)' : 'var(--warm-slate-100)', color: m.role === 'user' ? 'var(--adsk-white)' : 'var(--adsk-black)' })),
+      aiPrompts: ['Shorten this section', 'Make it more executive', `Tailor for ${customer}`].map(label => ({ label, send: () => this.sendChat(label) })),
+      chatDraft: s.chatDraft, setChatDraft: e => this.setState({ chatDraft: e.target.value }), chatKey: e => { if (e.key === 'Enter') this.sendChat(); }, sendChat: () => this.sendChat(),
+      comments: s.comments, commentDraft: s.commentDraft, setCommentDraft: e => this.setState({ commentDraft: e.target.value }),
+      addComment: () => { if (!s.commentDraft.trim()) return; this.setState(st => ({ comments: [...st.comments, { initials: 'MD', author: 'Micky Debelo', when: 'now', text: st.commentDraft.trim() }], commentDraft: '' })); }, commentKey: e => { if (e.key === 'Enter' && s.commentDraft.trim()) this.setState(st => ({ comments: [...st.comments, { initials: 'MD', author: 'Micky Debelo', when: 'now', text: st.commentDraft.trim() }], commentDraft: '' })); },
+      saveDraft: () => { this.setState({ savedAgo: 'Saved just now' }); this.showToast('Draft saved'); },
+      // step 4
+      openShare: () => this.setState({ shareOpen: true }), closeShare: () => this.setState({ shareOpen: false }), shareOpen: s.shareOpen, shareBody: `Send a review link to ${shareRecipients} teammates. They can comment but not export until you mark the playbook as ready.`,
+      sendShare: () => { this.setState({ shareOpen: false }); this.showToast('Review link sent to 2 teammates'); },
+      toast_more: () => this.showToast('Duplicate, archive and version history'),
+      reviewTabs: ['Document preview', 'Structure'], reviewTab: s.reviewTab, setReviewTab: t => this.setState({ reviewTab: t }), reviewIsDoc: s.reviewTab === 'Document preview', reviewIsStructure: s.reviewTab === 'Structure',
+      coverSubtitle: b.objective.trim() ? b.objective.trim().split('. ')[0].replace(/\.$/, '') + '.' : `A tailored plan for ${customer}.`, coverDate: 'September 2026',
+      tailor: tailorLabels.map((label, i) => ({ label, checked: s.tailor[i], toggle: v => this.setState(st => ({ tailor: st.tailor.map((x, j) => j === i ? v : x) })) })),
+      readyWord: warnCount === 0 && b.focus.length > 0 ? 'ready' : 'almost ready',
+      readiness: [
+        ['Based on approved and current content', true, null, ''],
+        ['Sources are cited and traceable', true, null, ''],
+        ['Covers your requested focus areas', b.focus.length > 0, () => this.goStep(1), 'Add focus areas in the brief'],
+        [warnCount ? `${warnCount} section${warnCount === 1 ? ' has' : 's have'} thin coverage` : 'No major knowledge gaps', warnCount === 0, () => { const w = thinSections[0]; this.setState({ step: 2, selected: w ? w.id : s.selected, previewId: null }); }, thinSections.length ? `Go to ${thinSections.map(x => x.n.replace(/\.$/, '')).join(', ')}` : ''],
+        ['Ready for customer use', warnCount === 0 && b.focus.length > 0, () => this.goStep(3), 'Resolve the items above']
+      ].map(([label, ok, fix, hint], i) => ({ label, ok, fail: !ok, fix, hint, bg: ok ? (i === 4 ? 'var(--hello-yellow)' : 'var(--adsk-black)') : 'var(--dawn)', fg: ok && i === 4 ? 'var(--adsk-black)' : 'var(--adsk-white)', weight: i === 4 ? 700 : 400, path: ok ? 'M5 13l4 4L19 7' : 'M12 7v6M12 17h.01' })),
+      exportFormats: ['Microsoft Word (.docx)', 'PDF document (.pdf)', 'PowerPoint deck (.pptx)', 'Curated video (.mp4)', 'Web page (shareable link)'], exportFormat: s.exportFormat, setExportFormat: e => this.setState({ exportFormat: e.target.value }),
+      includeSources: s.includeSources, setIncludeSources: v => this.setState({ includeSources: v }), includeComments: s.includeComments, setIncludeComments: v => this.setState({ includeComments: v }),
+      exporting: s.exporting, exportLabel: s.exporting ? 'Exporting…' : 'Export playbook', centerStyle: { justifyContent: 'center' },
+      exportPlaybook: () => { this.setState({ exporting: true }); setTimeout(() => { this.setState({ exporting: false }); this.showToast(`Exported as ${s.exportFormat}${s.includeSources ? ' with source list' : ''}`); }, 1200); },
+      shareLink: () => this.showToast('Link copied to clipboard'),
+      saveTemplate: () => { this.showToast('Saved as a template'); },
+      // other views
+      playbookCount: PLAYBOOKS.length, playbooks, playbooksEmpty: playbooks.length === 0, pbFilters: pbF.map(f => chip(f, s.pbFilter === f, () => this.setState({ pbFilter: f }))),
+      newPlaybook: () => this.setState({ view: 'create', step: 1 }),
+      library, libraryEmpty: library.length === 0, libQuery: s.libQuery, setLibQuery: e => this.setState({ libQuery: e.target.value }), libFilters: libF.map(f => chip(f, s.libFilter === f, () => this.setState({ libFilter: f }))), toast_upload: () => this.showToast('Upload flow opens a file picker'),
+      templates: TEMPLATES.map(t => ({ ...t, use: () => { this.setState({ view: 'create', step: 1 }); this.showToast(`Template "${t.title}" applied to the outline`); } })),
+      helpSteps: [['1', 'Define brief', 'Describe the customer, objective and focus areas. Optional sources and context sharpen the search.'], ['2', 'Find & trust', 'Review the proposed structure and pick approved sources per section. Every source shows status, age and relevance.'], ['3', 'Edit & create', 'Refine each section with the editor or the assistant. Citations stay attached to the text they support.'], ['4', 'Review & deliver', 'Tailor for the customer, pass the readiness check, then export or share for feedback.']].map(([n, title, desc]) => ({ n, title, desc })),
+      hasToast: !!s.toast, toast: s.toast
+    };
+  }
+  componentDidMount() { const st = this.props.startStep; if (st) this.setState({ step: Number(st) }); this.onResize = () => this.setState({ winW: window.innerWidth }); window.addEventListener('resize', this.onResize); this.onResize(); }
+  componentWillUnmount() { window.removeEventListener('resize', this.onResize); }
+}
+</script>
+</body>
+</html>

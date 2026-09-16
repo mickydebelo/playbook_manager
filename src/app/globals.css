@@ -1,0 +1,18 @@
+@import "../styles/tokens.css";
+
+/* Base rules copied from the design's <helmet> style block (design/Playbook Manager.dc.html). */
+html,body{margin:0;padding:0;height:100%;background:#fff}
+a{color:#000}a:hover{color:#1d91d0}
+input,textarea,select,button{font-family:'Artifakt Element',Arial,sans-serif}
+input:focus,textarea:focus,select:focus{outline:2px solid #000;outline-offset:1px}
+*{box-sizing:border-box}
+@keyframes pm-fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes pm-pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* style-hover="…" attributes from the design map to these classes. */
+.hv-slate100:hover{background:var(--warm-slate-100)}
+.hv-slate300:hover{background:var(--warm-slate-300)}
+.hv-op80:hover{opacity:.8}
+.hv-op75:hover{opacity:.75}
+.hv-border300:hover{border-color:var(--slate-300)}
+.hv-shadow:hover{box-shadow:var(--shadow-card)}

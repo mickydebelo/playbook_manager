@@ -1,0 +1,20 @@
+import { pgEnum } from "drizzle-orm/pg-core";
+import * as E from "@/shared/enums";
+
+export const userRole = pgEnum("user_role", E.USER_ROLES);
+export const industry = pgEnum("industry", E.INDUSTRIES);
+export const sizeBand = pgEnum("size_band", E.SIZE_BANDS);
+export const playbookStatus = pgEnum("playbook_status", E.PLAYBOOK_STATUSES);
+export const briefSourceKind = pgEnum("brief_source_kind", E.BRIEF_SOURCE_KINDS);
+export const coverage = pgEnum("coverage", E.COVERAGE);
+export const versionReason = pgEnum("version_reason", E.VERSION_REASONS);
+export const messageRole = pgEnum("message_role", E.MESSAGE_ROLES);
+export const sourceType = pgEnum("source_type", E.SOURCE_TYPES);
+export const sourceStatus = pgEnum("source_status", E.SOURCE_STATUSES);
+export const sourceCurrency = pgEnum("source_currency", E.SOURCE_CURRENCIES);
+export const relevance = pgEnum("relevance", E.RELEVANCES);
+export const collabRole = pgEnum("collab_role", E.COLLAB_ROLES);
+export const templateKind = pgEnum("template_kind", E.TEMPLATE_KINDS);
+export const exportFormat = pgEnum("export_format", E.EXPORT_FORMATS);
+export const jobType = pgEnum("job_type", E.JOB_TYPES);
+export const jobStatus = pgEnum("job_status", E.JOB_STATUSES);

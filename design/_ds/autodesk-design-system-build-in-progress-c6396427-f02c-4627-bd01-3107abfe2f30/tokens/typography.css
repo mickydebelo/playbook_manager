@@ -1,0 +1,13 @@
+:root{
+--text-display:700 64px/64px var(--font-legend);
+--text-h1:700 42px/44px var(--font-legend);
+--text-h2:700 32px/36px var(--font-legend);
+--text-h3:700 24px/28px var(--font-legend);
+--text-h4:700 18px/24px var(--font-legend);
+--text-body-lg:400 18px/28px var(--font-element);
+--text-body:400 16px/24px var(--font-element);
+--text-body-sm:400 14px/20px var(--font-element);
+--text-caption:400 12px/16px var(--font-element);
+--text-button:700 14px/16px var(--font-element);
+--text-label:700 12px/16px var(--font-element)
+}

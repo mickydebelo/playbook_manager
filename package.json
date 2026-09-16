@@ -1,0 +1,51 @@
+{
+  "name": "playbook-manager",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx --env-file-if-exists=.env src/server/db/migrate-cli.ts",
+    "db:seed": "tsx --env-file-if-exists=.env src/server/db/seed-cli.ts",
+    "worker": "tsx --env-file-if-exists=.env src/server/worker-cli.ts",
+    "smoke:ai": "tsx --env-file-if-exists=.env scripts/smoke-ai.ts",
+    "dev:isolated": "PGLITE_DATA_DIR=./.data/isolated next dev --port 3100",
+    "seed:isolated": "PGLITE_DATA_DIR=./.data/isolated tsx --env-file-if-exists=.env src/server/db/seed-cli.ts"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "^0.5.8",
+    "@electric-sql/pglite-pgvector": "^0.0.9",
+    "drizzle-orm": "^0.45.2",
+    "jose": "^6.2.12",
+    "next": "^16.3.5",
+    "openid-client": "^6.8.8",
+    "pg": "^8.23.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.7",
+    "@types/node": "^22.20.3",
+    "@types/pg": "^8.23.1",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "drizzle-kit": "^0.31.10",
+    "happy-dom": "^20.14.5",
+    "tsx": "^4.23.13",
+    "typescript": "~5.9.3",
+    "vitest": "^5.0.1"
+  }
+}
