@@ -166,35 +166,74 @@ export function Step3EditCreate({ v }: { v: WorkspaceVals }) {
             ) : null}
             {v.rightIsAI ? (
               <div style={sx("flex:1;display:flex;flex-direction:column;gap:12px;min-height:0")}>
-                <div ref={chatScrollRef} style={sx("flex:1;overflow:auto;display:flex;flex-direction:column;gap:10px")}>
-                  {v.chat.map((m: any, i: number) => (
-                    <Fragment key={i}>
-                      <div style={sxm("max-width:90%;padding:10px 14px;border-radius:var(--radius-md);font:var(--text-body-sm);white-space:pre-line", { alignSelf: m.align, background: m.bg, color: m.color })}>{m.text}</div>
-                      {m.appliedLabel ? (
-                        <div style={sx("align-self:flex-start;max-width:90%;font:var(--text-caption);color:var(--slate);display:flex;gap:8px;align-items:baseline;flex-wrap:wrap")}>
-                          <span>{m.appliedLabel}</span>
-                          {m.canUndo ? (
-                            <button onClick={m.undo} style={sx("border:none;background:none;text-decoration:underline;cursor:pointer;font:var(--text-caption);color:var(--slate);padding:0")}>Undo</button>
-                          ) : null}
+                {/* Panel header: grounds the assistant and shows what it is scoped to edit. */}
+                <div style={sx("display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--slate-200);border-radius:var(--radius-md);background:linear-gradient(180deg,var(--warm-slate-100),var(--adsk-white))")}>
+                  <span aria-hidden style={sx("width:32px;height:32px;border-radius:50%;background:var(--adsk-black);display:flex;align-items:center;justify-content:center;flex-shrink:0")}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--hello-yellow)"><path d="M12 2l2 6 6 2-6 2-2 6-2-6-6-2 6-2z" /></svg>
+                  </span>
+                  <div style={sx("min-width:0;flex:1")}>
+                    <div style={sx("font:var(--text-body-sm);font-weight:700")}>AI Assistant</div>
+                    <div style={sx("font:var(--text-caption);color:var(--slate);white-space:nowrap;overflow:hidden;text-overflow:ellipsis")}>Editing “{v.selectedTitle}”</div>
+                  </div>
+                </div>
+
+                <div ref={chatScrollRef} style={sx("flex:1;overflow:auto;display:flex;flex-direction:column;gap:14px;padding:2px")}>
+                  {v.chat.map((m: any, i: number) => {
+                    const mine = m.role === "user";
+                    return (
+                      <Fragment key={i}>
+                        <div style={sxm("display:flex;gap:8px;max-width:92%", { alignSelf: m.align, flexDirection: mine ? "row-reverse" : "row" })}>
+                          <span aria-hidden style={sxm("width:26px;height:26px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;margin-top:2px", mine ? { background: "var(--warm-slate-300)", color: "var(--adsk-black)" } : { background: "var(--adsk-black)" })}>
+                            {mine ? (
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-6 8-6s8 2 8 6" /></svg>
+                            ) : (
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="var(--hello-yellow)"><path d="M12 2l2 6 6 2-6 2-2 6-2-6-6-2 6-2z" /></svg>
+                            )}
+                          </span>
+                          <div style={sxm("padding:10px 14px;font:var(--text-body-sm);white-space:pre-line;box-shadow:var(--shadow-card)", { background: m.bg, color: m.color, borderRadius: mine ? "14px 14px 4px 14px" : "14px 14px 14px 4px" })}>{m.text}</div>
                         </div>
-                      ) : null}
-                    </Fragment>
-                  ))}
+                        {m.appliedLabel ? (
+                          <div style={sx("align-self:flex-start;margin-left:34px;display:inline-flex;align-items:baseline;gap:8px;flex-wrap:wrap;font:var(--text-caption);color:var(--slate)")}>
+                            <span>{m.appliedLabel}</span>
+                            {m.canUndo ? (
+                              <button onClick={m.undo} style={sx("border:none;background:none;text-decoration:underline;cursor:pointer;font:var(--text-caption);color:var(--slate);padding:0")}>Undo</button>
+                            ) : null}
+                          </div>
+                        ) : null}
+                      </Fragment>
+                    );
+                  })}
                   {v.chatBusy ? (
-                    <div style={sx("align-self:flex-start;max-width:90%;padding:10px 14px;border-radius:var(--radius-md);background:var(--warm-slate-100);color:var(--slate);font:var(--text-body-sm);display:flex;align-items:center;gap:8px")}>
-                      <span style={sx("width:14px;height:14px;border-radius:50%;border:2px solid var(--slate-200);border-top-color:var(--slate);animation:pm-spin .8s linear infinite;flex-shrink:0")} />
-                      AI Assistant is thinking…
+                    <div style={sx("display:flex;gap:8px;align-self:flex-start;max-width:92%")}>
+                      <span aria-hidden style={sx("width:26px;height:26px;border-radius:50%;flex-shrink:0;background:var(--adsk-black);display:flex;align-items:center;justify-content:center;margin-top:2px")}>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="var(--hello-yellow)"><path d="M12 2l2 6 6 2-6 2-2 6-2-6-6-2 6-2z" /></svg>
+                      </span>
+                      <div role="status" aria-label="AI Assistant is thinking" style={sx("display:flex;align-items:center;gap:5px;padding:13px 14px;border-radius:14px 14px 14px 4px;background:var(--warm-slate-100);box-shadow:var(--shadow-card)")}>
+                        {[0, 1, 2].map((d) => (
+                          <span key={d} style={sxm("width:7px;height:7px;border-radius:50%;background:var(--slate-300)", { animation: "pm-typing 1s ease-in-out infinite", animationDelay: `${d * 0.15}s` })} />
+                        ))}
+                      </div>
                     </div>
                   ) : null}
                 </div>
-                <div style={sx("display:flex;flex-wrap:wrap;gap:6px")}>
-                  {v.aiPrompts.map((p: any) => (
-                    <button key={p.label} onClick={p.send} disabled={v.chatSendDisabled} style={sx("height:30px;padding:0 12px;border:1px solid var(--slate-200);border-radius:var(--radius-sm);background:var(--adsk-white);font:var(--text-caption);cursor:pointer")} className="hv-slate100">{p.label}</button>
-                  ))}
+
+                <div style={sx("display:flex;flex-direction:column;gap:8px")}>
+                  <span style={sx("font:var(--text-label);letter-spacing:.06em;text-transform:uppercase;color:var(--slate)")}>Quick actions</span>
+                  <div style={sx("display:flex;flex-wrap:wrap;gap:8px")}>
+                    {v.aiPrompts.map((p: any) => (
+                      <button key={p.label} onClick={p.send} disabled={v.chatSendDisabled} style={sxm("display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border:1px solid var(--slate-200);border-radius:999px;background:var(--adsk-white);font:var(--text-caption)", { cursor: v.chatSendDisabled ? "not-allowed" : "pointer", opacity: v.chatSendDisabled ? 0.5 : 1 })} className="hv-slate100">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--slate)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l1.7 5.3L19 10l-5.3 1.7L12 17l-1.7-5.3L5 10l5.3-1.7z" /></svg>
+                        {p.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <div style={sx("display:flex;gap:8px")}>
-                  <input value={v.chatDraft} onChange={v.setChatDraft} onKeyDown={v.chatKey} disabled={v.chatBusy} placeholder={v.chatBusy ? "Waiting for the assistant…" : "Ask the assistant — Enter to send"} aria-label="Ask the AI assistant" style={sxm("flex:1;height:40px;padding:0 12px;border:1px solid var(--slate-200);border-radius:var(--radius-sm);font:var(--text-body-sm)", { background: v.chatBusy ? "var(--warm-slate-100)" : "var(--adsk-white)" })} />
-                  <Button variant="primary" disabled={v.chatSendDisabled} onClick={v.sendChat}>Send</Button>
+
+                <div className="pm-composer" style={sx("display:flex;align-items:center;gap:8px;padding:6px 6px 6px 14px;border:1px solid var(--slate-200);border-radius:var(--radius-lg);background:var(--adsk-white)")}>
+                  <input value={v.chatDraft} onChange={v.setChatDraft} onKeyDown={v.chatKey} disabled={v.chatBusy} placeholder={v.chatBusy ? "Waiting for the assistant…" : "Ask the assistant — Enter to send"} aria-label="Ask the AI assistant" style={sx("flex:1;min-width:0;height:32px;border:none;background:transparent;font:var(--text-body-sm);color:var(--adsk-black);padding:0")} />
+                  <button onClick={v.sendChat} disabled={v.chatSendDisabled} aria-label="Send message" style={sxm("width:34px;height:34px;border-radius:50%;border:none;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:var(--adsk-black);transition:opacity .15s ease", { cursor: v.chatSendDisabled ? "not-allowed" : "pointer", opacity: v.chatSendDisabled ? 0.4 : 1 })}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--adsk-white)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2L11 13" /><path d="M22 2l-7 20-4-9-9-4z" /></svg>
+                  </button>
                 </div>
               </div>
             ) : null}

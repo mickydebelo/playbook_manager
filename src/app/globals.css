@@ -9,6 +9,14 @@ input:focus,textarea:focus,select:focus{outline:2px solid #000;outline-offset:1p
 @keyframes pm-fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 @keyframes pm-pulse{0%,100%{opacity:1}50%{opacity:.35}}
 @keyframes pm-spin{to{transform:rotate(360deg)}}
+/* AI Assistant typing indicator: three dots gently bouncing in sequence. */
+@keyframes pm-typing{0%,60%,100%{transform:translateY(0);opacity:.35}30%{transform:translateY(-3px);opacity:1}}
+
+/* AI Assistant composer: the border lives on the wrapper so the input can sit flush inside it.
+   Keep a clearly visible focus indicator on the whole composer for keyboard users. */
+.pm-composer{transition:border-color .15s ease,box-shadow .15s ease}
+.pm-composer:focus-within{border-color:var(--adsk-black);box-shadow:0 0 0 1px var(--adsk-black)}
+.pm-composer input:focus{outline:none}
 
 /* Respect users who ask for less motion: neutralise the fade-in, skeleton pulse, spinners and
    smooth scrolling. The JS typing reveal is also short-circuited in useWorkspace under this query. */
