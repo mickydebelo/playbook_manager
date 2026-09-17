@@ -15,7 +15,7 @@ export const GET = defineRoute({ auth: false }, async ({ req, db }) => {
     codeVerifier: String(payload.codeVerifier),
   });
   const token = await signSession({ sub: user.id, role: user.role, email: user.email, name: user.name });
-  const next = typeof payload.next === "string" && payload.next.startsWith("/") ? payload.next : "/";
+  const next = typeof payload.next === "string" && payload.next.startsWith("/") ? payload.next : "/welcome";
   const headers = new Headers({ location: new URL(next, env.APP_BASE_URL).toString() });
   headers.append("set-cookie", sessionCookieHeader(token));
   headers.append("set-cookie", "pm_oidc=; Path=/api/auth; HttpOnly; Max-Age=0");

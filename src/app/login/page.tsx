@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
   const user = await getServerUser();
   const { next } = await searchParams;
-  const target = next && next.startsWith("/") ? next : "/";
+  const target = next && next.startsWith("/") ? next : "/welcome";
   if (user) redirect(target);
   const env = getEnv();
   const dev = env.AUTH_PROVIDER === "dev" && env.DEV_LOGIN_ENABLED && env.NODE_ENV !== "production";

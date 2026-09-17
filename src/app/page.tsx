@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-// The design opens on "Create playbook".
+// Authenticated users land on the welcome/landing screen; the (app) layout gates auth from there.
 export default function Home() {
-  redirect("/playbooks/new");
+  redirect("/welcome");
 }

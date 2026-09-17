@@ -7,7 +7,7 @@ import { defineRoute } from "@/server/http/handler";
 export const GET = defineRoute({ auth: false }, async ({ req }) => {
   const env = getEnv();
   const url = new URL(req.url);
-  const next = url.searchParams.get("next") ?? "/";
+  const next = url.searchParams.get("next") ?? "/welcome";
   if (env.AUTH_PROVIDER === "dev") {
     return Response.redirect(new URL(`/login?next=${encodeURIComponent(next)}`, env.APP_BASE_URL), 302);
   }

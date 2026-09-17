@@ -79,6 +79,8 @@ type UiState = {
   includeSources: boolean;
   includeComments: boolean;
   shareOpen: boolean;
+  /** The chapter awaiting delete confirmation (Step 2), or null when no dialog is open. */
+  pendingChapterDelete: { id: string; title: string; sectionCount: number } | null;
   winW: number;
   libQuery: string;
   libFilter: string;
@@ -207,6 +209,7 @@ export function useWorkspace(options: WorkspaceOptions): WorkspaceVals {
     includeSources: false,
     includeComments: false,
     shareOpen: false,
+    pendingChapterDelete: null,
     winW: typeof window !== "undefined" ? window.innerWidth : 1440,
     libQuery: "",
     libFilter: "All",
@@ -896,6 +899,39 @@ export function useWorkspace(options: WorkspaceOptions): WorkspaceVals {
     }
   };
 
+  const removeSection = async (sectionId: string) => {
+    if (!playbookId) return;
+    try {
+      await workspaceApi.deleteSection(sectionId);
+      // Drop the selection if it pointed at the removed section, so selectedId falls back to the first one.
+      if (s.selectedSectionId === sectionId) setState({ selectedSectionId: null, previewId: null });
+      await refreshDetail();
+    } catch (err) {
+      errorToast(err, "Couldn't remove the section");
+    }
+  };
+
+  const removeChapter = async (chapterId: string) => {
+    if (!playbookId) return;
+    try {
+      await workspaceApi.deleteChapter(chapterId);
+      // If the selected section lived in this chapter, clear it so a valid section is reselected.
+      if (selectedNode?.chapterId === chapterId) setState({ selectedSectionId: null, previewId: null });
+      await refreshDetail();
+    } catch (err) {
+      errorToast(err, "Couldn't remove the chapter");
+    } finally {
+      setState({ pendingChapterDelete: null });
+    }
+  };
+
+  /** Chapters cascade to their sections, so confirm before deleting one. */
+  const requestRemoveChapter = (chapterId: string) => {
+    const chapter = detail?.outline.find((c) => c.id === chapterId);
+    if (!chapter) return;
+    setState({ pendingChapterDelete: { id: chapter.id, title: chapter.title, sectionCount: chapter.sections.length } });
+  };
+
   const toggleSource = async (sourceId: string, selected: boolean) => {
     if (!selectedId) return;
     setCandidates((list) => list.map((c) => (c.id === sourceId ? { ...c, selected } : c)));
@@ -971,9 +1007,13 @@ export function useWorkspace(options: WorkspaceOptions): WorkspaceVals {
   const selectNode = (node: FlatNode) => {
     if (node.sectionId) setState({ selectedSectionId: node.sectionId, previewId: null, editRaw: false });
   };
+  // Guards so the outline can never be emptied mid-flow: keep at least one chapter and one section.
+  const chapterTotal = detail?.outline.length ?? 0;
+  const sectionTotal = flat.reduce((n, node) => (node.kind === "section" ? n + 1 : n), 0);
 
   const outline = visibleNodes.map((node, i) => {
     const active = node.sectionId === selectedId && (node.kind === "section" || node.childCount === 0);
+    const isChapterRow = node.kind === "chapter";
     return {
       key: node.key,
       n: node.n,
@@ -989,6 +1029,11 @@ export function useWorkspace(options: WorkspaceOptions): WorkspaceVals {
       borderTop: node.kind === "chapter" && i > 0 ? "1px solid var(--slate-100)" : "none",
       mt: node.kind === "chapter" && i > 0 ? "8px" : "0",
       iconColor: active ? "var(--adsk-black)" : "var(--slate)",
+      canRemove: isChapterRow ? chapterTotal > 1 : sectionTotal > 1,
+      removeLabel: isChapterRow ? "Remove chapter" : "Remove section",
+      remove: isChapterRow
+        ? () => requestRemoveChapter(node.chapterId)
+        : () => { if (node.sectionId) void removeSection(node.sectionId); },
       select: () => selectNode(node),
       toggle: (e: React.MouseEvent) => {
         e.stopPropagation();

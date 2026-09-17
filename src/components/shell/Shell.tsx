@@ -9,6 +9,7 @@ import { ToastProvider } from "./Toast";
 
 /** Application frame from the design (lines 27–59, 690–702): top bar, left navigation, main area. */
 const NAV: { id: string; label: string; icon: keyof typeof ICONS; href: string; match: (p: string) => boolean }[] = [
+  { id: "home", label: "Home", icon: "home", href: "/welcome", match: (p) => p === "/welcome" },
   { id: "create", label: "Create playbook", icon: "plus", href: "/playbooks/new", match: (p) => p === "/playbooks/new" || /^\/playbooks\/[^/]+$/.test(p) && p !== "/playbooks" },
   { id: "playbooks", label: "My playbooks", icon: "doc", href: "/playbooks", match: (p) => p === "/playbooks" },
   { id: "library", label: "Knowledge library", icon: "lib", href: "/library", match: (p) => p.startsWith("/library") },

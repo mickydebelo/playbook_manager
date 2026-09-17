@@ -39,7 +39,7 @@ describe("MyPlaybooks", () => {
 
   it("shows a first-run CTA when there are no playbooks at all", () => {
     render(<MyPlaybooks initial={[]} />);
-    expect(screen.getByText("Create your first playbook")).toBeInTheDocument();
+    expect(screen.getByText("Create a new playbook")).toBeInTheDocument();
     expect(screen.queryByText("No playbooks in this view.")).toBeNull();
   });
 
