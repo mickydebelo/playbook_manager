@@ -28,14 +28,19 @@ describe("MyPlaybooks", () => {
     expect(screen.getAllByText("Delivered")).toHaveLength(3); // filter chip + badge + stage column
   });
 
-  it("filters by status and shows the empty state", async () => {
-    render(<MyPlaybooks initial={rows} />);
+  it("filters by status and shows a filter-specific empty message", async () => {
+    const draftOnly: PlaybookSummary[] = [{ ...base, id: "p1", title: "Digital transformation playbook", status: "draft", stage: 3, customer }];
+    render(<MyPlaybooks initial={draftOnly} />);
     const u = userEvent.setup();
     await u.click(screen.getByRole("button", { name: "Delivered", pressed: false }));
     expect(screen.queryByText("Digital transformation playbook")).toBeNull();
-    expect(screen.getByText("Design automation adoption")).toBeInTheDocument();
+    expect(screen.getByText("No delivered playbooks yet.")).toBeInTheDocument();
+  });
+
+  it("shows a first-run CTA when there are no playbooks at all", () => {
     render(<MyPlaybooks initial={[]} />);
-    expect(screen.getByText("No playbooks in this view.")).toBeInTheDocument();
+    expect(screen.getByText("Create your first playbook")).toBeInTheDocument();
+    expect(screen.queryByText("No playbooks in this view.")).toBeNull();
   });
 
   it("opens a playbook at its current stage", async () => {

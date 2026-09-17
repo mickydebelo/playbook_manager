@@ -145,8 +145,17 @@ export function Step2FindTrust({ v }: { v: WorkspaceVals }) {
                 ))}
               </div>
             ) : null}
+            {v.canCurate && v.preview.status !== "approved" ? (
+              <div style={sx("display:flex;align-items:center;gap:10px;margin-top:12px;padding:10px 12px;border-radius:var(--radius-sm);background:var(--warm-slate-100);font:var(--text-body-sm)")}>
+                <span style={sx("flex:1;color:var(--slate)")}>This source is unreviewed. Approve it to make it retrievable.</span>
+                <Button variant="primary" onClick={() => v.approveSource(v.preview.id)}>Approve</Button>
+              </div>
+            ) : null}
             <div style={sx("display:flex;gap:10px;margin-top:12px")}>
               <Button variant="secondary" onClick={v.openOriginal}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 4h6v6M20 4l-9 9M18 14v6H4V6h6" /></svg>Open original</Button>
+              {v.canCurate && v.preview.status !== "archived" ? (
+                <Button variant="secondary" onClick={() => v.archiveSource(v.preview.id)}>Archive</Button>
+              ) : null}
               <Button variant={v.useVariant} onClick={v.toggleUsePreview} style={v.growStyle}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 13l4 4L19 7" /></svg>{v.useLabel}</Button>
             </div>
           </div>

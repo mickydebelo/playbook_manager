@@ -4,7 +4,7 @@
  * design/_ds/.../_ds_bundle.js (namespace AutodeskDesignSystem_c63964).
  * Props, variants, sizes and every style value are unchanged; only TypeScript types were added.
  */
-import { useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
 // ---- Button ---------------------------------------------------------------
 const BUTTON_SIZES = {
@@ -368,17 +368,46 @@ export function Dialog({
   primaryLabel?: string;
   onPrimary?: () => void;
 }) {
+  const primaryRef = useRef<HTMLButtonElement | null>(null);
+  const cardRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (!open) return;
+    // Move focus into the dialog on open, so keyboard users are not left behind the overlay.
+    primaryRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose?.();
+        return;
+      }
+      // Simple focus trap: keep Tab within the dialog's focusable controls.
+      if (e.key === "Tab" && cardRef.current) {
+        const nodes = cardRef.current.querySelectorAll<HTMLElement>("button, [href], input, select, textarea, [tabindex]:not([tabindex='-1'])");
+        if (!nodes.length) return;
+        const first = nodes[0]!;
+        const last = nodes[nodes.length - 1]!;
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
   if (!open) return null;
   return (
-    <div role="dialog" aria-modal="true" aria-label={title} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,.5)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-element)", zIndex: 20 }}>
-      <div style={{ background: "var(--adsk-white)", borderRadius: "var(--radius-xl)", padding: 32, width: 360, boxShadow: "var(--shadow-card)" }}>
+    <div role="dialog" aria-modal="true" aria-label={title} onClick={onClose} style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,.5)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--font-element)", zIndex: 20 }}>
+      <div ref={cardRef} onClick={(e) => e.stopPropagation()} style={{ background: "var(--adsk-white)", borderRadius: "var(--radius-xl)", padding: 32, width: 360, boxShadow: "var(--shadow-card)" }}>
         <h3 style={{ font: "var(--text-h3)", fontFamily: "var(--font-legend)", margin: "0 0 12px" }}>{title}</h3>
         <p style={{ font: "var(--text-body)", color: "var(--slate)", margin: "0 0 24px" }}>{body}</p>
         <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
           <button type="button" onClick={onClose} style={{ background: "none", border: "none", font: "var(--text-button)", fontFamily: "var(--font-element)", cursor: "pointer", padding: "11px 16px" }}>
             Cancel
           </button>
-          <button type="button" onClick={onPrimary} style={{ background: "var(--adsk-black)", color: "var(--adsk-white)", border: "none", borderRadius: "var(--radius-sm)", font: "var(--text-button)", fontFamily: "var(--font-element)", cursor: "pointer", padding: "11px 20px" }}>
+          <button ref={primaryRef} type="button" onClick={onPrimary} style={{ background: "var(--adsk-black)", color: "var(--adsk-white)", border: "none", borderRadius: "var(--radius-sm)", font: "var(--text-button)", fontFamily: "var(--font-element)", cursor: "pointer", padding: "11px 20px" }}>
             {primaryLabel}
           </button>
         </div>

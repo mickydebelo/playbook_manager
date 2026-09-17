@@ -1,10 +1,16 @@
 "use client";
-import { Fragment } from "react";
+import { Fragment, useEffect, useRef } from "react";
 import { sx, sxm } from "@/lib/ui/sx";
 import { Button, Badge, ProgressBar, Skeleton, Tabs } from "@/components/ds";
 import type { WorkspaceVals } from "@/features/workspace/types";
 
 export function Step3EditCreate({ v }: { v: WorkspaceVals }) {
+  // Keep the newest chat turn (and the thinking indicator) in view as the conversation grows.
+  const chatScrollRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const el = chatScrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [v.chat.length, v.chatBusy, v.rightIsAI]);
   return (
     <div data-screen-label="3 Edit and create" style={sx("flex:1;min-height:0;display:flex;flex-direction:column;padding:24px 24px 0;animation:pm-fade .2s ease")}>
       {v.narrow ? (
@@ -160,7 +166,7 @@ export function Step3EditCreate({ v }: { v: WorkspaceVals }) {
             ) : null}
             {v.rightIsAI ? (
               <div style={sx("flex:1;display:flex;flex-direction:column;gap:12px;min-height:0")}>
-                <div style={sx("flex:1;overflow:auto;display:flex;flex-direction:column;gap:10px")}>
+                <div ref={chatScrollRef} style={sx("flex:1;overflow:auto;display:flex;flex-direction:column;gap:10px")}>
                   {v.chat.map((m: any, i: number) => (
                     <Fragment key={i}>
                       <div style={sxm("max-width:90%;padding:10px 14px;border-radius:var(--radius-md);font:var(--text-body-sm);white-space:pre-line", { alignSelf: m.align, background: m.bg, color: m.color })}>{m.text}</div>
@@ -187,7 +193,7 @@ export function Step3EditCreate({ v }: { v: WorkspaceVals }) {
                   ))}
                 </div>
                 <div style={sx("display:flex;gap:8px")}>
-                  <input value={v.chatDraft} onChange={v.setChatDraft} onKeyDown={v.chatKey} placeholder="Ask the assistant" style={sx("flex:1;height:40px;padding:0 12px;border:1px solid var(--slate-200);border-radius:var(--radius-sm);font:var(--text-body-sm)")} />
+                  <input value={v.chatDraft} onChange={v.setChatDraft} onKeyDown={v.chatKey} disabled={v.chatBusy} placeholder={v.chatBusy ? "Waiting for the assistant…" : "Ask the assistant — Enter to send"} aria-label="Ask the AI assistant" style={sxm("flex:1;height:40px;padding:0 12px;border:1px solid var(--slate-200);border-radius:var(--radius-sm);font:var(--text-body-sm)", { background: v.chatBusy ? "var(--warm-slate-100)" : "var(--adsk-white)" })} />
                   <Button variant="primary" disabled={v.chatSendDisabled} onClick={v.sendChat}>Send</Button>
                 </div>
               </div>

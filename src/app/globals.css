@@ -10,6 +10,12 @@ input:focus,textarea:focus,select:focus{outline:2px solid #000;outline-offset:1p
 @keyframes pm-pulse{0%,100%{opacity:1}50%{opacity:.35}}
 @keyframes pm-spin{to{transform:rotate(360deg)}}
 
+/* Respect users who ask for less motion: neutralise the fade-in, skeleton pulse, spinners and
+   smooth scrolling. The JS typing reveal is also short-circuited in useWorkspace under this query. */
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important;scroll-behavior:auto !important}
+}
+
 /* style-hover="…" attributes from the design map to these classes. */
 .hv-slate100:hover{background:var(--warm-slate-100)}
 .hv-slate300:hover{background:var(--warm-slate-300)}

@@ -105,6 +105,7 @@ export function candidateView(c: SectionCandidateDto) {
     pages: c.pageCount ?? 1,
     usedIn: c.usedIn,
     url: c.url,
+    status: c.status,
     relevantFor: c.relevantFor,
     tags: tagsForSource(c, c.relevance),
     typeLabel: type.label,

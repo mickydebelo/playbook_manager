@@ -57,6 +57,10 @@ export const workspaceApi = {
   sourceExcerpts: (sectionId: string, sourceId: string) =>
     api.get<SourceExcerpts>(`/api/sections/${sectionId}/knowledge/${sourceId}/excerpts`),
 
+  /** Curator/admin review decision. Approving is what makes a source retrievable. */
+  setSourceStatus: (sourceId: string, status: "draft" | "approved" | "archived") =>
+    api.patch<{ id: string; status: string }>(`/api/knowledge/${sourceId}`, { status }),
+
   /** Uploads a document into the library. Parsing and embedding happen in a job. */
   ingestSource: (file: File, opts: { customerId?: string | null } = {}) => {
     const form = new FormData();

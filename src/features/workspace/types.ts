@@ -42,6 +42,8 @@ export type SourceView = {
   pages: number;
   usedIn: number;
   subtitle: string;
+  /** Review state: "draft" (unreviewed), "approved" (retrievable) or "archived". */
+  status: string;
   tags: Tag[];
   relevantFor: string;
   typeLabel: string;

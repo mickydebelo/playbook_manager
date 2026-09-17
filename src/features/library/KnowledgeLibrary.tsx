@@ -31,11 +31,35 @@ export function KnowledgeLibrary({ v }: { v: WorkspaceVals }) {
               <span style={sx("font:var(--text-body-sm);color:var(--slate)")}>{k.org} · {k.year} · {k.pages} pages</span>
               <div style={sx("display:flex;flex-wrap:wrap;gap:6px;margin-top:6px")}>{k.tags.map((t: any) => (<Badge key={t.label} tone={t.tone}>{t.label}</Badge>))}</div>
               <span style={sx("font:var(--text-caption);color:var(--slate);margin-top:6px")}>Used in {k.usedIn} playbooks</span>
+              {v.canCurate ? (
+                <div style={sx("display:flex;gap:8px;margin-top:10px")} onClick={(e) => e.stopPropagation()}>
+                  {k.status !== "approved" ? (
+                    <button type="button" onClick={() => v.approveSource(k.id)} style={sx("height:28px;padding:0 12px;border:1px solid var(--morning-600);border-radius:var(--radius-sm);background:var(--morning-600);color:var(--adsk-white);font:var(--text-caption);cursor:pointer")} className="hv-op80">Approve</button>
+                  ) : null}
+                  {k.status !== "archived" ? (
+                    <button type="button" onClick={() => v.archiveSource(k.id)} style={sx("height:28px;padding:0 12px;border:1px solid var(--slate-200);border-radius:var(--radius-sm);background:var(--adsk-white);font:var(--text-caption);cursor:pointer")} className="hv-slate100">Archive</button>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
           </div>
         ))}
       </div>
-      {v.libraryEmpty ? (<div style={sx("padding:48px;text-align:center;font:var(--text-body-sm);color:var(--slate)")}>Nothing matches your search.</div>) : null}
+      {v.libraryEmpty ? (
+        v.libraryFiltering ? (
+          <div style={sx("padding:48px;text-align:center;font:var(--text-body-sm);color:var(--slate)")}>Nothing matches your search.</div>
+        ) : (
+          <div style={sx("padding:56px 40px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px")}>
+            <div style={sx("width:44px;height:44px;border-radius:var(--radius-md);background:var(--warm-slate-100);display:flex;align-items:center;justify-content:center;color:var(--slate)")}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 16V5M7 10l5-5 5 5M4 20h16" /></svg>
+            </div>
+            <div style={sx("font:var(--text-h4);font-size:18px")}>No sources yet</div>
+            <div style={sx("font:var(--text-body-sm);color:var(--slate);max-width:420px")}>Upload a PDF, Word or PowerPoint file. It is parsed, chunked and page-indexed in the background, then a curator approves it to make it retrievable.</div>
+            <Button variant="secondary" disabled={v.uploading} onClick={() => picker.current?.click()} style={{ marginTop: 4 }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 16V5M7 10l5-5 5 5M4 20h16" /></svg>{v.uploading ? "Indexing…" : "Upload source"}</Button>
+          </div>
+        )
+      ) : null}
     </div>
   );
 }

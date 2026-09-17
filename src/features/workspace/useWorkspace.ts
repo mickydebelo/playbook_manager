@@ -5,7 +5,7 @@ import type { JobDto, PlaybookDetail, SectionCandidateDto, SectionDetail, Source
 import { briefInputSchema } from "@/shared/contracts";
 import { SIZE_BANDS, SIZE_BAND_DEFS } from "@/shared/enums";
 import { ApiClientError } from "@/lib/api-client";
-import { useToast } from "@/components/shell/Toast";
+import { useToast, type ToastTone } from "@/components/shell/Toast";
 import { ICONS } from "./icons";
 import { briefFromDetail, briefToInput, DEFAULT_BRAND_COLOR, emptyBrief, INDUSTRY_OPTIONS, type BriefState } from "./brief-state";
 import { useSetState } from "./useSetState";
@@ -131,9 +131,9 @@ function initialsOf(name: string): string {
 export function useWorkspace(options: WorkspaceOptions): WorkspaceVals {
   const router = useRouter();
   const toast = useToast();
-  const showToast = useCallback((m: string) => toast.show(m), [toast]);
+  const showToast = useCallback((m: string, tone: ToastTone = "info") => toast.show(m, tone), [toast]);
   const errorToast = useCallback(
-    (err: unknown, fallback: string) => showToast(err instanceof ApiClientError ? err.message : fallback),
+    (err: unknown, fallback: string) => showToast(err instanceof ApiClientError ? err.message : fallback, "error"),
     [showToast],
   );
 
@@ -160,6 +160,8 @@ export function useWorkspace(options: WorkspaceOptions): WorkspaceVals {
   const [lastResult, setLastResult] = useState<JobDto | null>(null);
   /** Guards the reattach probe so it runs once per playbook rather than on every render. */
   const reattachedFor = useRef<string | null>(null);
+  /** When the current draft run started, used for a rough live ETA in the progress label. */
+  const draftStartedAt = useRef<number | null>(null);
 
   const playbookId = detail?.id ?? null;
   const flat = useMemo(() => flattenOutline(detail), [detail]);
@@ -294,6 +296,16 @@ export function useWorkspace(options: WorkspaceOptions): WorkspaceVals {
     };
   }, [selectedId, s.previewId, s.step]);
 
+  // Esc closes the source preview panel (a side panel, not a Dialog, so it needs its own handler).
+  useEffect(() => {
+    if (!s.previewId) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setState({ previewId: null });
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [s.previewId, setState]);
+
   // ---- section content + assistant history for the editor ------------------
   useEffect(() => {
     if (!selectedId || s.step !== 3) return;
@@ -370,6 +382,11 @@ export function useWorkspace(options: WorkspaceOptions): WorkspaceVals {
     const text = sectionCacheRef.current[selectedId]?.contentMd ?? "";
     if (!text) return;
     revealedFor.current = selectedId;
+    // Honour reduced-motion: show the whole section at once instead of typing it out.
+    if (typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+      setRevealed(null);
+      return;
+    }
     setRevealed(0);
     let shown = 0;
     const step = Math.max(8, Math.ceil(text.length / 90));
@@ -507,7 +524,7 @@ export function useWorkspace(options: WorkspaceOptions): WorkspaceVals {
       },
       "Couldn't find relevant knowledge",
     );
-    if (ok) showToast("Structure and sources are ready");
+    if (ok) showToast("Structure and sources are ready", "success");
   };
 
   // ---- step 2 → 3 ----------------------------------------------------------
@@ -590,6 +607,15 @@ export function useWorkspace(options: WorkspaceOptions): WorkspaceVals {
     };
   }, [playbookId, pullSectionContents, refreshDetail]);
 
+  // Stamp when a draft run begins so the ETA can extrapolate from the sections done so far.
+  useEffect(() => {
+    if (job?.type === "create_draft") {
+      if (draftStartedAt.current === null) draftStartedAt.current = Date.now();
+    } else {
+      draftStartedAt.current = null;
+    }
+  }, [job?.type]);
+
   const createDraft = async () => {
     if (!playbookId || drafting) return;
     // Move to step 3 straight away and let the sections land one by one.
@@ -628,7 +654,7 @@ export function useWorkspace(options: WorkspaceOptions): WorkspaceVals {
       async (finished) => {
         const name = typeof finished.result?.fileName === "string" ? finished.result.fileName : `playbook.${format}`;
         setState({ downloadName: name });
-        showToast(`${format.toUpperCase()} ready — ${name}`);
+        showToast(`${format.toUpperCase()} ready — ${name}`, "success");
       },
       "Couldn't export the playbook",
     );
@@ -811,6 +837,36 @@ export function useWorkspace(options: WorkspaceOptions): WorkspaceVals {
     }
   };
 
+  // Only curators/admins may change a source's review state; the server enforces this too.
+  const canCurate = options.user.role === "curator" || options.user.role === "admin";
+  const reviewSource = async (sourceId: string, status: "approved" | "archived" | "draft") => {
+    if (!canCurate) return;
+    const previous = candidates.find((c) => c.id === sourceId)?.status;
+    // Optimistically flip the badge, then reconcile with the server.
+    setCandidates((list) => list.map((c) => (c.id === sourceId ? { ...c, status } : c)));
+    try {
+      await workspaceApi.setSourceStatus(sourceId, status);
+      showToast(
+        status === "approved" ? "Source approved — it can now be used" : status === "archived" ? "Source archived" : "Source moved to unreviewed",
+        status === "approved" ? "success" : "info",
+      );
+      // Refresh the library grid; approving/archiving can change what appears under the active filter.
+      setState((st) => ({ libraryVersion: st.libraryVersion + 1 }));
+      // Re-pull this section's candidates so archived sources drop out and relevance re-ranks.
+      if (selectedId && s.step === 2) {
+        try {
+          const list = await workspaceApi.sectionKnowledge(selectedId, { q: s.knowledgeQuery, approvedOnly: s.filterOn });
+          setCandidates(list);
+        } catch {
+          /* keep the optimistic state if the refresh fails */
+        }
+      }
+    } catch (err) {
+      if (previous !== undefined) setCandidates((list) => list.map((c) => (c.id === sourceId ? { ...c, status: previous } : c)));
+      errorToast(err, "Couldn't update the source");
+    }
+  };
+
   const postComment = () => {
     if (!s.commentDraft.trim()) return;
     setState((st) => ({
@@ -951,6 +1007,16 @@ export function useWorkspace(options: WorkspaceOptions): WorkspaceVals {
       : [];
   const sizeLabel = (sizeDefs[b.size]?.[0] ?? "Medium").toLowerCase();
   const jobLabel = job?.progress?.label;
+  // A rough, live "about N left" derived from how long the sections so far have taken. Only for the
+  // draft run (find_knowledge has no start stamp, so it naturally yields no estimate).
+  const draftEta = (() => {
+    const p = job?.progress;
+    if (job?.type !== "create_draft" || !p || p.total <= 0 || p.done <= 0 || draftStartedAt.current === null) return "";
+    const perUnit = (Date.now() - draftStartedAt.current) / 1000 / p.done;
+    const remaining = Math.max(0, Math.round((perUnit * (p.total - p.done)) / 10) * 10);
+    if (remaining <= 0) return "";
+    return remaining >= 60 ? ` · about ${Math.round(remaining / 60)} min left` : ` · about ${remaining}s left`;
+  })();
 
   const tailorLabels = [
     `Use ${customer} terminology and branding`,
@@ -1054,6 +1120,9 @@ export function useWorkspace(options: WorkspaceOptions): WorkspaceVals {
     filterBg: s.filterOn ? "var(--warm-slate-300)" : "var(--adsk-white)",
     filterLabel: s.filterOn ? "Approved only" : "Filter",
     hasPreview: !!preview, preview, closePreview: () => setState({ previewId: null }),
+    canCurate,
+    approveSource: (id: string) => void reviewSource(id, "approved"),
+    archiveSource: (id: string) => void reviewSource(id, "archived"),
     previewTabs: ["Preview", "Metadata"], previewTab: s.previewTab,
     setPreviewTab: (t: string) => setState({ previewTab: t }),
     previewIsPreview: s.previewTab === "Preview", previewIsMeta: s.previewTab === "Metadata", previewMeta,
@@ -1090,7 +1159,7 @@ export function useWorkspace(options: WorkspaceOptions): WorkspaceVals {
     jobProgress: job?.progress ?? null,
     jobProgressPercent: job?.progress && job.progress.total > 0 ? Math.round((job.progress.done / job.progress.total) * 100) : 0,
     showProgress: !!job?.progress && job.progress.total > 1,
-    progressLabel: job?.progress ? `${job.progress.label} · ${job.progress.done} of ${job.progress.total}` : "",
+    progressLabel: job?.progress ? `${job.progress.label} · ${job.progress.done} of ${job.progress.total}${draftEta}` : "",
     // A partial draft used to finish silently: the job succeeded, and the sections that failed were
     // left empty with nothing in the UI to say so.
     draftFailures,
@@ -1172,7 +1241,7 @@ export function useWorkspace(options: WorkspaceOptions): WorkspaceVals {
     aiPrompts: ["Shorten this section", "Make it more executive", `Tailor for ${customer}`].map((label) => ({ label, send: () => void sendChat(label) })),
     chatDraft: s.chatDraft,
     setChatDraft: (e: React.ChangeEvent<HTMLInputElement>) => setState({ chatDraft: e.target.value }),
-    chatKey: (e: React.KeyboardEvent<HTMLInputElement>) => { if (e.key === "Enter") void sendChat(); },
+    chatKey: (e: React.KeyboardEvent<HTMLInputElement>) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); void sendChat(); } },
     sendChat: () => void sendChat(),
     chatSendDisabled: s.chatBusy,
     comments: s.comments, commentDraft: s.commentDraft,
@@ -1181,7 +1250,7 @@ export function useWorkspace(options: WorkspaceOptions): WorkspaceVals {
     commentKey: (e: React.KeyboardEvent<HTMLInputElement>) => { if (e.key === "Enter") postComment(); },
     saveDraft: () => void (async () => {
       if (selectedId && sectionCache[selectedId]) await saveContent(sectionCache[selectedId]!.contentMd);
-      showToast("Draft saved");
+      showToast("Draft saved", "success");
     })(),
 
     // step 4
@@ -1248,7 +1317,10 @@ export function useWorkspace(options: WorkspaceOptions): WorkspaceVals {
     saveTemplate: () => showToast("Save as template is not built yet"),
 
     // library / help
-    library, libraryEmpty: library.length === 0, libQuery: s.libQuery,
+    library, libraryEmpty: library.length === 0,
+    // Distinguishes a genuinely empty library from a search/filter that simply matched nothing.
+    libraryFiltering: !!s.libQuery.trim() || s.libFilter !== "All",
+    libQuery: s.libQuery,
     setLibQuery: (e: React.ChangeEvent<HTMLInputElement>) => setState({ libQuery: e.target.value }),
     libFilters: ["All", "Approved", "Current", "External"].map((f) => chip(f, s.libFilter === f, () => setState({ libFilter: f }))),
     uploading: s.uploading,
@@ -1263,10 +1335,10 @@ export function useWorkspace(options: WorkspaceOptions): WorkspaceVals {
         const started = await workspaceApi.ingestSource(file);
         showToast(`Indexing ${started.title}`);
         const finished = await waitForJob(started.jobId);
-        if (finished.status === "failed") showToast(finished.error ?? "That file could not be indexed");
+        if (finished.status === "failed") showToast(finished.error ?? "That file could not be indexed", "error");
         else {
           const chunks = Number((finished.result as { chunks?: number } | null)?.chunks ?? 0);
-          showToast(`${started.title} indexed: ${chunks} passages. Approve it to make it retrievable.`);
+          showToast(`${started.title} indexed: ${chunks} passages. Approve it to make it retrievable.`, "success");
         }
       } catch (err) {
         errorToast(err, "That file could not be uploaded");

@@ -22,7 +22,7 @@ export function Step1DefineBrief({ v }: { v: WorkspaceVals }) {
             <div style={sx("font:var(--text-h4);margin-bottom:4px")}>Customer</div>
             <div style={sx("font:var(--text-body-sm);color:var(--slate);margin-bottom:12px")}>Enter the name of the customer.</div>
             <div style={sx("position:relative")}>
-              <input value={v.brief.customer} onChange={v.setCustomer} placeholder="Customer name" aria-label="Customer name" style={sx("width:100%;height:44px;padding:0 40px 0 14px;border:1px solid var(--slate-200);border-radius:var(--radius-md);font:var(--text-body);color:var(--adsk-black);background:var(--adsk-white)")} />
+              <input autoFocus={!v.brief.customer} value={v.brief.customer} onChange={v.setCustomer} placeholder="Customer name" aria-label="Customer name" style={sx("width:100%;height:44px;padding:0 40px 0 14px;border:1px solid var(--slate-200);border-radius:var(--radius-md);font:var(--text-body);color:var(--adsk-black);background:var(--adsk-white)")} />
               <button type="button" onClick={v.clearCustomer} aria-label="Clear" style={sx("position:absolute;right:8px;top:8px;width:28px;height:28px;border:none;background:none;cursor:pointer;color:var(--slate);display:flex;align-items:center;justify-content:center")}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12" /></svg>
               </button>

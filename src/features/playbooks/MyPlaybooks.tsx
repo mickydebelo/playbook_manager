@@ -85,7 +85,22 @@ export function MyPlaybooks({ initial }: { initial: PlaybookSummary[] }) {
             <span style={sx("color:var(--slate)")}>{formatUpdated(p.updatedAt)}</span>
           </div>
         ))}
-        {rows.length === 0 ? <div style={sx("padding:40px;text-align:center;font:var(--text-body-sm);color:var(--slate)")}>No playbooks in this view.</div> : null}
+        {rows.length === 0 ? (
+          initial.length === 0 ? (
+            <div style={sx("padding:56px 40px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:12px")}>
+              <div style={sx("width:44px;height:44px;border-radius:var(--radius-md);background:var(--warm-slate-100);display:flex;align-items:center;justify-content:center;color:var(--slate)")}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6M9 13h6M9 17h4" /></svg>
+              </div>
+              <div style={sx("font:var(--text-h4);font-size:18px")}>Create your first playbook</div>
+              <div style={sx("font:var(--text-body-sm);color:var(--slate);max-width:420px")}>Start from a customer brief and the engine proposes a structure, gathers sources and drafts each section.</div>
+              <Button variant="primary" onClick={() => router.push("/playbooks/new")} style={{ marginTop: 4 }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 5v14M5 12h14" /></svg>Create playbook
+              </Button>
+            </div>
+          ) : (
+            <div style={sx("padding:40px;text-align:center;font:var(--text-body-sm);color:var(--slate)")}>No {active.label.toLowerCase()} playbooks yet.</div>
+          )
+        ) : null}
       </div>
     </div>
   );
