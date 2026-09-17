@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { chapters, sections } from "../../../db/schema";
 import { embedText, invokeJson, isAiConfigured } from "../../../ai/aps-client";
-import { buildSystemPrompt, outlinePrompt } from "../../../ai/prompts/playbook";
+import { buildSystemPrompt, outlinePrompt, type BriefContext } from "../../../ai/prompts/playbook";
 import * as knowledge from "../../knowledge/repository";
 import { recomputeCoverage } from "../../sections/repository";
 import type { JobContext } from "../worker";
@@ -26,6 +26,28 @@ function parseOutline(value: unknown): ProposedOutline {
       title: String(c.title ?? "Untitled").slice(0, 200),
       sections: (Array.isArray(c.sections) ? c.sections : []).slice(0, 6).map((s) => ({ title: String(s.title ?? "Untitled").slice(0, 200) })),
     })),
+  };
+}
+
+/**
+ * A sensible, deterministic playbook structure used when the AI gateway cannot propose one (not
+ * configured, unreachable, or a malformed reply). It is built from the brief's focus areas so it is
+ * still tailored, and it means a brand-new playbook always lands on an editable Step 2 rather than a
+ * blank page. The consultant can rename, add and remove chapters and sections from here.
+ */
+function fallbackOutline(brief: BriefContext): ProposedOutline {
+  const focus = brief.focusAreas.map((f) => f.trim()).filter(Boolean).slice(0, 6);
+  const approach = focus.length
+    ? focus.map((f) => ({ title: f }))
+    : [{ title: "Proposed solution" }, { title: "Key capabilities" }];
+  return {
+    chapters: [
+      { title: "Executive summary", sections: [{ title: "Overview and objectives" }] },
+      { title: "Current state and challenges", sections: [{ title: "Where the customer is today" }] },
+      { title: "Recommended approach", sections: approach },
+      { title: "Implementation roadmap", sections: [{ title: "Phases and milestones" }] },
+      { title: "Success metrics", sections: [{ title: "How we measure impact" }] },
+    ],
   };
 }
 
@@ -56,16 +78,26 @@ export async function findKnowledgeHandler({ db, job, progress }: JobContext): P
   let outlineProposed = false;
 
   if (chapterRows.length === 0) {
-    if (!isAiConfigured()) throw new Error("No outline exists and the AI gateway is not configured");
-    await progress({ done: 0, total: 1, label: "Proposing a structure" });
-    const proposed = await invokeJson({
-      tier: "fast",
-      system: buildSystemPrompt(brief, "outline"),
-      maxTokens: 1500,
-      temperature: 0.15,
-      messages: [{ role: "user", content: outlinePrompt(brief) }],
-      shape: parseOutline,
-    });
+    // Prefer an AI-proposed structure, but never let its absence or failure block the playbook:
+    // fall back to a deterministic outline so Step 2 is always populated and editable.
+    let proposed: ProposedOutline | null = null;
+    if (isAiConfigured()) {
+      await progress({ done: 0, total: 1, label: "Proposing a structure" });
+      try {
+        proposed = await invokeJson({
+          tier: "fast",
+          system: buildSystemPrompt(brief, "outline"),
+          maxTokens: 1500,
+          temperature: 0.15,
+          messages: [{ role: "user", content: outlinePrompt(brief) }],
+          shape: parseOutline,
+        });
+      } catch (err) {
+        // AI gateway unreachable or the reply was unusable — log and use the deterministic outline.
+        console.error(`[jobs] find_knowledge outline proposal failed, using fallback: ${err instanceof Error ? err.message : String(err)}`);
+      }
+    }
+    if (!proposed) proposed = fallbackOutline(brief);
     for (const [ci, chapter] of proposed.chapters.entries()) {
       const [created] = await db.insert(chapters).values({ playbookId, title: chapter.title, position: ci }).returning();
       const kids = chapter.sections ?? [];
@@ -83,7 +115,9 @@ export async function findKnowledgeHandler({ db, job, progress }: JobContext): P
   const sectionRows = await db.select().from(sections).where(eq(sections.playbookId, playbookId)).orderBy(sections.position);
   const chapterTitle = new Map(chapterRows.map((c) => [c.id, c.title]));
 
-  const useVectors = isAiConfigured() && (await knowledge.hasEmbeddings(db));
+  // Starts as vector search when possible, but degrades to keyword search on the first embedding
+  // failure so an unreachable AI gateway yields best-effort sources instead of failing the job.
+  let vectorMode = isAiConfigured() && (await knowledge.hasEmbeddings(db));
   let matched = 0;
 
   for (const [i, section] of sectionRows.entries()) {
@@ -93,9 +127,19 @@ export async function findKnowledgeHandler({ db, job, progress }: JobContext): P
     // Retrieval is scoped to this customer: shared sources plus their own, never another's.
     // `includeUnapproved` surfaces relevant but not-yet-approved uploads so they can be reviewed and
     // selected here; the customer boundary and archived exclusion still hold.
-    const matches = useVectors
-      ? await knowledge.searchChunksByVector(db, await embedText(topic), brief.customerId, 60, { includeUnapproved: true })
-      : await knowledge.searchChunksByText(db, [section.title, ...brief.focusAreas].flatMap((t) => t.split(/\s+/)), brief.customerId, 60, { includeUnapproved: true });
+    const keywordTerms = [section.title, ...brief.focusAreas].flatMap((t) => t.split(/\s+/));
+    let matches: Awaited<ReturnType<typeof knowledge.searchChunksByText>>;
+    if (vectorMode) {
+      try {
+        matches = await knowledge.searchChunksByVector(db, await embedText(topic), brief.customerId, 60, { includeUnapproved: true });
+      } catch (err) {
+        console.error(`[jobs] find_knowledge embedding failed, falling back to keyword search: ${err instanceof Error ? err.message : String(err)}`);
+        vectorMode = false;
+        matches = await knowledge.searchChunksByText(db, keywordTerms, brief.customerId, 60, { includeUnapproved: true });
+      }
+    } else {
+      matches = await knowledge.searchChunksByText(db, keywordTerms, brief.customerId, 60, { includeUnapproved: true });
+    }
 
     // Best chunk per source, then the closest few sources.
     const bySource = new Map<string, { distance: number; text: string }>();
@@ -126,6 +170,6 @@ export async function findKnowledgeHandler({ db, job, progress }: JobContext): P
     chapters: chapterRows.length,
     sections: sectionRows.length,
     candidates: matched,
-    retrieval: useVectors ? "vector" : "keyword",
+    retrieval: vectorMode ? "vector" : "keyword",
   };
 }

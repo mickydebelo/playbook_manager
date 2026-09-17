@@ -153,6 +153,16 @@ export function useWorkspace(options: WorkspaceOptions): WorkspaceVals {
   const [revealed, setRevealed] = useState<number | null>(null);
   const revealedFor = useRef<string | null>(null);
   const previewRef = useRef<HTMLIFrameElement | null>(null);
+  /** Local object URL for a just-picked logo, so Step 1 can preview it before it is attached to a customer. */
+  const [logoObjectUrl, setLogoObjectUrl] = useState<string | null>(null);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  /**
+   * Covers step 1's create → kick retrieval → redirect sequence, which spans three round trips
+   * before any job exists to hang a busy state on. Without it the primary button looked idle and
+   * stayed clickable, so a second click created a second playbook.
+   */
+  const [submitting, setSubmitting] = useState(false);
+  const submittingRef = useRef(false);
   /**
    * The last job's terminal state. `job` is cleared when work finishes so the busy flags go quiet,
    * which used to discard the result with it — including the list of sections that failed to draft.
@@ -407,6 +417,36 @@ export function useWorkspace(options: WorkspaceOptions): WorkspaceVals {
     briefDirty.current = true;
     setState((st) => ({ brief: { ...st.brief, ...patch } }));
   };
+  const uploadLogo = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    // Clear the input so re-picking the same file still fires a change event.
+    e.target.value = "";
+    if (!file) return;
+    setUploadingLogo(true);
+    try {
+      const { assetId } = await workspaceApi.uploadLogo(file);
+      // Show the picked image immediately; the served /api/assets URL only resolves once the asset
+      // is attached to a customer (on save), so a local object URL covers the gap until then.
+      const url = URL.createObjectURL(file);
+      setLogoObjectUrl((prev) => {
+        if (prev) URL.revokeObjectURL(prev);
+        return url;
+      });
+      updBrief({ logoAssetId: assetId });
+      showToast("Customer logo added", "success");
+    } catch (err) {
+      errorToast(err, "Couldn't upload that image");
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+  const removeLogo = () => {
+    setLogoObjectUrl((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
+    updBrief({ logoAssetId: null });
+  };
   const syncUrlStep = (n: number) => {
     if (typeof window === "undefined") return;
     const url = new URL(window.location.href);
@@ -472,8 +512,19 @@ export function useWorkspace(options: WorkspaceOptions): WorkspaceVals {
   const briefInvalid = !s.brief.customer.trim() || !s.brief.objective.trim();
   const finding = job?.type === "find_knowledge" || false;
 
+  const beginSubmit = () => {
+    submittingRef.current = true;
+    setSubmitting(true);
+  };
+  const endSubmit = () => {
+    submittingRef.current = false;
+    setSubmitting(false);
+  };
+
   const findKnowledge = async () => {
-    if (briefInvalid || finding) return;
+    // The ref, not the state, guards re-entry: two clicks in one tick would both see `submitting`
+    // as false and create two playbooks.
+    if (briefInvalid || finding || submittingRef.current) return;
     const input = briefToInput(s.brief);
     const parsed = briefInputSchema.safeParse(input);
     if (!parsed.success) {
@@ -484,6 +535,7 @@ export function useWorkspace(options: WorkspaceOptions): WorkspaceVals {
     const isNew = !playbookId;
     let id = playbookId;
     briefDirty.current = false;
+    beginSubmit();
     try {
       const saved = isNew
         ? await workspaceApi.createPlaybook({ ...input, ...(options.templateId ? { templateId: options.templateId } : {}) })
@@ -492,6 +544,7 @@ export function useWorkspace(options: WorkspaceOptions): WorkspaceVals {
       setDetail(saved);
     } catch (err) {
       briefDirty.current = true;
+      endSubmit();
       errorToast(err, isNew ? "Couldn't create the playbook" : "Couldn't save the brief");
       return;
     }
@@ -504,9 +557,12 @@ export function useWorkspace(options: WorkspaceOptions): WorkspaceVals {
         await workspaceApi.findKnowledge(id!);
         await workspaceApi.setStage(id!, 2).catch(() => undefined);
       } catch (err) {
+        endSubmit();
         errorToast(err, "Couldn't find relevant knowledge");
         return;
       }
+      // Deliberately still locked: the redirect remounts the workspace and the reattach probe on
+      // the other side takes over the progress state.
       router.replace(`/playbooks/${id}?step=2`);
       return;
     }
@@ -524,6 +580,7 @@ export function useWorkspace(options: WorkspaceOptions): WorkspaceVals {
       },
       "Couldn't find relevant knowledge",
     );
+    endSubmit();
     if (ok) showToast("Structure and sources are ready", "success");
   };
 
@@ -583,6 +640,15 @@ export function useWorkspace(options: WorkspaceOptions): WorkspaceVals {
           await refreshDetail(playbookId);
           return;
         }
+        // The new-playbook path kicks retrieval, then navigates here, which remounts with an empty
+        // outline (the job builds it). If the job already finished by the time we probe, the branch
+        // above misses it — so when retrieval has succeeded but this mount still has no structure,
+        // pull the detail once so step 2 fills instead of sitting blank until a manual refresh.
+        if (!cancelled && retrieval && retrieval.status === "succeeded" && !options.initial?.outline?.length) {
+          setLastResult(retrieval);
+          await refreshDetail(playbookId);
+          return;
+        }
 
         const running = await workspaceApi.latestJob(playbookId, "create_draft");
         if (cancelled || !running || (running.status !== "running" && running.status !== "queued")) return;
@@ -604,6 +670,11 @@ export function useWorkspace(options: WorkspaceOptions): WorkspaceVals {
     })();
     return () => {
       cancelled = true;
+      // Release the guard for whoever mounts next. React's Strict Mode (on by default with the app
+      // router) runs mount → cleanup → mount in development: the first pass set the guard and was
+      // then cancelled, so without this the second pass bailed out and the probe never attached at
+      // all — step 2 sat empty with no progress until a manual refresh.
+      if (reattachedFor.current === playbookId) reattachedFor.current = null;
     };
   }, [playbookId, pullSectionContents, refreshDetail]);
 
@@ -1061,9 +1132,14 @@ export function useWorkspace(options: WorkspaceOptions): WorkspaceVals {
     // step 1
     setCustomer: (e: React.ChangeEvent<HTMLInputElement>) => updBrief({ customer: e.target.value }),
     clearCustomer: () => updBrief({ customer: "" }),
-    toggleLogo: () => { updBrief({ logo: !b.logo }); showToast(b.logo ? "Customer logo removed" : "Logo upload is not built yet"); },
-    logoBg: b.logo ? "var(--warm-slate-100)" : "var(--adsk-white)",
-    logoLabel: b.logo ? "Logo added" : "Add customer logo",
+    uploadLogo,
+    removeLogo,
+    uploadingLogo,
+    hasLogo: !!b.logoAssetId,
+    // Prefer the just-picked local preview; fall back to the served asset for a saved logo.
+    logoUrl: logoObjectUrl ?? (b.logoAssetId ? `/api/assets/${b.logoAssetId}` : ""),
+    logoBg: b.logoAssetId ? "var(--warm-slate-100)" : "var(--adsk-white)",
+    logoLabel: uploadingLogo ? "Uploading…" : b.logoAssetId ? "Logo added" : "Add customer logo",
     toggleColor: () => updBrief({ color: b.color ? null : DEFAULT_BRAND_COLOR }),
     brandColor: b.color || "var(--adsk-white)",
     industries: INDUSTRY_OPTIONS,
@@ -1094,8 +1170,8 @@ export function useWorkspace(options: WorkspaceOptions): WorkspaceVals {
     optionalOpen: b.contextOpen, optionalRot: b.contextOpen ? "90deg" : "0deg",
     setContext: (e: React.ChangeEvent<HTMLTextAreaElement>) => updBrief({ context: e.target.value }),
     optionalSummary: b.contextOpen ? "" : `${b.sources.length} source${b.sources.length === 1 ? "" : "s"}${b.context.trim() ? " · context added" : ""}`,
-    briefInvalid, finding: finding || briefInvalid,
-    findLabel: finding ? (jobLabel ?? "Finding relevant knowledge…") : "Find relevant knowledge",
+    briefInvalid, finding: finding || submitting || briefInvalid,
+    findLabel: finding || submitting ? (jobLabel ?? "Finding relevant knowledge…") : "Find relevant knowledge",
     findKnowledge: () => void findKnowledge(),
     cancel: () => router.push("/playbooks"),
 

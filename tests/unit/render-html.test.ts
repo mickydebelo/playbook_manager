@@ -53,6 +53,13 @@ describe("renderPlaybookHtml", () => {
     expect(html).toContain("/fonts/ArtifaktElement-Regular.otf");
   });
 
+  it("puts a customer logo on the cover in place of the default brand mark", () => {
+    // Preview path: a served URL. Print path would instead pass a data: URI; both flow through here.
+    const html = renderPlaybookHtml({ ...input, assets: { ...webAssets(), logo: "/api/assets/logo-123" } });
+    expect(html).toContain('class="cover-logo" src="/api/assets/logo-123"');
+    expect(html).not.toContain('src="/brand/autodesk-logo.png"');
+  });
+
   /**
    * The PDF is printed from a temporary file:// page. Any root-relative asset URL resolves to
    * file:///brand/... there and prints as a broken image, which is how the cover lost its logo.

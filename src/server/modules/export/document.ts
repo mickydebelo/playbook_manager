@@ -5,7 +5,19 @@ import type { CurrentUser } from "../../auth/current-user";
 import { notFound } from "../../http/errors";
 import { requireReadablePlaybook } from "../sections/service";
 import { coverSubtitle, renderPlaybookHtml, type RenderChapter, type RenderInput } from "./render-html";
-import type { DocumentAssets } from "./assets";
+import { webAssets, type DocumentAssets } from "./assets";
+import { readAsset } from "../storage";
+
+/** Inlines a stored logo as a data URI for printing. Returns null if it is missing or not an image. */
+async function logoDataUri(db: Db, assetId: string): Promise<string | null> {
+  try {
+    const { data, mimeType } = await readAsset(db, assetId);
+    if (!mimeType.startsWith("image/")) return null;
+    return `data:${mimeType};base64,${data.toString("base64")}`;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Assembles the whole playbook into the renderer's input shape. One place builds the document
@@ -51,6 +63,17 @@ export async function buildRenderInput(
     sources = rows;
   }
 
+  // Put the customer's logo on the cover in place of the default brand mark. The printed PDF renders
+  // from a file:// page, so it needs the bytes inlined; the on-screen preview is same-origin and can
+  // load the served URL. Absence of `opts.assets` marks the preview path (only the PDF passes assets).
+  let assets = opts.assets;
+  if (head.customer.logoAssetId) {
+    const logo = opts.assets
+      ? await logoDataUri(db, head.customer.logoAssetId)
+      : `/api/assets/${head.customer.logoAssetId}`;
+    if (logo) assets = { ...(opts.assets ?? webAssets()), logo };
+  }
+
   return {
     title: head.playbook.title.toLowerCase().includes(head.customer.name.toLowerCase())
       ? head.playbook.title
@@ -62,7 +85,7 @@ export async function buildRenderInput(
     date: head.playbook.updatedAt.toLocaleDateString("en-GB", { month: "long", year: "numeric" }),
     chapters: renderChapters,
     sources,
-    assets: opts.assets,
+    assets,
     draft: head.playbook.status !== "delivered",
   };
 }

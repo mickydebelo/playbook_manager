@@ -11,7 +11,7 @@ export type BriefState = {
   focus: string[];
   contextOpen: boolean;
   context: string;
-  logo: boolean;
+  logoAssetId: string | null; // stored asset id for the customer logo, or null
   color: string | null; // hex or null
   sources: BriefSourceState[];
 };
@@ -25,7 +25,7 @@ export function industryFromLabel(label: string): Industry {
 }
 
 export function emptyBrief(): BriefState {
-  return { customer: "", industry: INDUSTRY_LABELS.aeco, size: 1, objective: "", focus: [], contextOpen: false, context: "", logo: false, color: null, sources: [] };
+  return { customer: "", industry: INDUSTRY_LABELS.aeco, size: 1, objective: "", focus: [], contextOpen: false, context: "", logoAssetId: null, color: null, sources: [] };
 }
 
 export function briefFromDetail(d: PlaybookDetail): BriefState {
@@ -37,7 +37,7 @@ export function briefFromDetail(d: PlaybookDetail): BriefState {
     focus: d.brief.focusAreas,
     contextOpen: false,
     context: d.brief.additionalContext,
-    logo: !!d.customer.logoAssetId,
+    logoAssetId: d.customer.logoAssetId,
     color: d.customer.brandColor,
     sources: d.brief.sources.map((s) => ({ id: s.id, type: s.kind, title: s.title, url: s.url })),
   };
@@ -53,6 +53,6 @@ export function briefToInput(b: BriefState): BriefInput {
     additionalContext: b.context.trim(),
     sources: b.sources.filter((s) => s.title.trim()).map((s) => ({ kind: s.type, title: s.title.trim(), url: s.url.trim() })),
     brandColor: b.color,
-    logoAssetId: null,
+    logoAssetId: b.logoAssetId,
   };
 }

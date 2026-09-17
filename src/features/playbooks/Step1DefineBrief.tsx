@@ -29,11 +29,21 @@ export function Step1DefineBrief({ v }: { v: WorkspaceVals }) {
             </div>
           </div>
           <div style={sx("display:flex;flex-direction:column;align-items:flex-end;gap:6px")}>
-            <div style={sx("display:flex;gap:12px")}>
-              <button type="button" onClick={v.toggleLogo} className="hv-op80" style={sxm("display:flex;align-items:center;gap:10px;height:44px;padding:0 16px;border:1px solid var(--slate-200);border-radius:var(--radius-md);font:var(--text-body-sm);cursor:pointer", { background: v.logoBg })}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 16l5-5 4 4 3-3 6 6" /><circle cx="16" cy="9" r="1.5" /></svg>
-                {v.logoLabel}
-              </button>
+            <div style={sx("display:flex;align-items:center;gap:12px")}>
+              {v.hasLogo && v.logoUrl ? (
+                <span style={sx("display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 8px 0 10px;border:1px solid var(--slate-200);border-radius:var(--radius-md);background:var(--warm-slate-100)")}>
+                  <img src={v.logoUrl} alt="Customer logo preview" style={sx("height:28px;max-width:96px;object-fit:contain")} />
+                  <button type="button" onClick={v.removeLogo} aria-label="Remove logo" style={sx("width:28px;height:28px;border:none;background:none;cursor:pointer;color:var(--slate);display:flex;align-items:center;justify-content:center")}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12" /></svg>
+                  </button>
+                </span>
+              ) : (
+                <label className="hv-op80" style={sxm("display:flex;align-items:center;gap:10px;height:44px;padding:0 16px;border:1px solid var(--slate-200);border-radius:var(--radius-md);font:var(--text-body-sm);cursor:pointer", { background: v.logoBg })}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M3 16l5-5 4 4 3-3 6 6" /><circle cx="16" cy="9" r="1.5" /></svg>
+                  {v.logoLabel}
+                  <input type="file" accept="image/png,image/jpeg,image/webp" onChange={v.uploadLogo} disabled={v.uploadingLogo} style={sx("display:none")} />
+                </label>
+              )}
               <button type="button" onClick={v.toggleColor} className="hv-op80" style={sx("display:flex;align-items:center;gap:10px;height:44px;padding:0 16px;border:1px solid var(--slate-200);border-radius:var(--radius-md);background:var(--adsk-white);font:var(--text-body-sm);cursor:pointer")}>
                 <span style={sxm("width:16px;height:16px;border-radius:50%;border:1px solid var(--slate-200)", { background: v.brandColor })} />
                 Add brand color

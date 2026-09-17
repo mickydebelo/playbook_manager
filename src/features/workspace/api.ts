@@ -61,6 +61,13 @@ export const workspaceApi = {
   setSourceStatus: (sourceId: string, status: "draft" | "approved" | "archived") =>
     api.patch<{ id: string; status: string }>(`/api/knowledge/${sourceId}`, { status }),
 
+  /** Uploads a customer brand logo (image), returning the stored asset id to attach to the brief. */
+  uploadLogo: (file: File) => {
+    const form = new FormData();
+    form.append("file", file);
+    return api.post<{ assetId: string }>("/api/uploads/logo", form);
+  },
+
   /** Uploads a document into the library. Parsing and embedding happen in a job. */
   ingestSource: (file: File, opts: { customerId?: string | null } = {}) => {
     const form = new FormData();
